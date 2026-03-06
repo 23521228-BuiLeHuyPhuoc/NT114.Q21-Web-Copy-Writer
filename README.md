@@ -3,7 +3,7 @@
 ## Thông Tin Đồ Án
 
 - **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
-- **Môn học:** NT114 – Mạng máy tính nâng cao
+- **Môn học:** NT114.Q21
 - **Thực hiện:** Bùi Lê Huy Phước (1 thành viên)
 - **Công nghệ:** Node.js (Express), React.js (Next.js), MongoDB, GPT-4 / Llama
 
@@ -11,7 +11,7 @@
 
 ## Tổng Quan Công Việc
 
-Dự án được chia thành **6 giai đoạn** với tổng cộng **35 công việc chính**. Mỗi công việc được phân rõ phần việc cụ thể, thời gian ước tính, và sản phẩm đầu ra.
+Dự án được chia thành **6 giai đoạn** với tổng cộng **35 công việc chính**. Mỗi công việc được phân rõ phần việc cụ thể, thời gian ước tính (ngày làm việc), và sản phẩm đầu ra. Thời gian còn lại trong mỗi tuần dành cho nghiên cứu, sửa lỗi, và dự phòng.
 
 | Giai đoạn | Tên | Thời gian | Số công việc |
 |-----------|-----|-----------|--------------|
@@ -326,15 +326,17 @@ Dự án được chia thành **6 giai đoạn** với tổng cộng **35 công 
 
 ## Tổng Kết Thời Gian
 
-| Giai đoạn | Công việc | Thời gian |
-|-----------|-----------|-----------|
-| GĐ 1 – Khởi tạo & môi trường | 7 công việc | 9 ngày (Tuần 1–2) |
-| GĐ 2 – Xác thực & người dùng | 6 công việc | 9 ngày (Tuần 3–4) |
-| GĐ 3 – AI & sinh nội dung | 8 công việc | 15 ngày (Tuần 5–7) |
-| GĐ 4 – Nội dung & template | 6 công việc | 10 ngày (Tuần 8–9) |
-| GĐ 5 – Llama & fine-tuning | 5 công việc | 15 ngày (Tuần 10–12) |
-| GĐ 6 – Kiểm thử & triển khai | 3 công việc | 9 ngày (Tuần 13–14) |
-| **Tổng** | **35 công việc** | **~67 ngày (~14 tuần)** |
+| Giai đoạn | Công việc | Ngày làm việc | Tuần |
+|-----------|-----------|---------------|------|
+| GĐ 1 – Khởi tạo & môi trường | 7 công việc | 9 ngày | Tuần 1–2 |
+| GĐ 2 – Xác thực & người dùng | 6 công việc | 9 ngày | Tuần 3–4 |
+| GĐ 3 – AI & sinh nội dung | 8 công việc | 15 ngày | Tuần 5–7 |
+| GĐ 4 – Nội dung & template | 6 công việc | 10 ngày | Tuần 8–9 |
+| GĐ 5 – Llama & fine-tuning | 5 công việc | 15 ngày | Tuần 10–12 |
+| GĐ 6 – Kiểm thử & triển khai | 3 công việc | 9 ngày | Tuần 13–14 |
+| **Tổng** | **35 công việc** | **67 ngày** | **14 tuần** |
+
+> **Ghi chú:** Mỗi tuần tính 5 ngày làm việc (tổng 70 ngày trong 14 tuần). Thời gian dự phòng ~3 ngày dành cho nghiên cứu, debug và xử lý phát sinh.
 
 ---
 
