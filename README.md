@@ -1,348 +1,379 @@
-# AI Copywriter – Kế Hoạch Công Việc Đồ Án
+# AI Copywriter – Kế Hoạch Đồ Án
 
 ## Thông Tin Đồ Án
 
 - **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
 - **Môn học:** NT114.Q21
-- **Thực hiện:** Bùi Lê Huy Phước (1 thành viên)
-- **Công nghệ:** Node.js (Express), React.js (Next.js), MongoDB, GPT-4 / Llama
+- **Thực hiện:** Bùi Lê Huy Phước
+- **Công nghệ chính:** Next.js, Express.js, MongoDB, OpenAI GPT-4 / Llama
 
 ---
 
-## Tổng Quan Công Việc
+## 1. Các Chức Năng Cần Làm
 
-Dự án được chia thành **6 giai đoạn** với tổng cộng **35 công việc chính**. Mỗi công việc được phân rõ phần việc cụ thể, thời gian ước tính (ngày làm việc), và sản phẩm đầu ra. Thời gian còn lại trong mỗi tuần dành cho nghiên cứu, sửa lỗi, và dự phòng.
+### 1.1 Trang Công Khai (Landing Page)
 
-| Giai đoạn | Tên | Thời gian | Số công việc |
-|-----------|-----|-----------|--------------|
-| 1 | Khởi tạo dự án & thiết lập môi trường | Tuần 1–2 | 7 |
-| 2 | Xác thực & quản lý người dùng | Tuần 3–4 | 6 |
-| 3 | Tích hợp AI & sinh nội dung | Tuần 5–7 | 8 |
-| 4 | Quản lý nội dung & template | Tuần 8–9 | 6 |
-| 5 | Tích hợp Llama & fine-tuning | Tuần 10–12 | 5 |
-| 6 | Kiểm thử, tối ưu & triển khai | Tuần 13–14 | 3 |
+- Trang chủ giới thiệu sản phẩm, tính năng nổi bật, bảng giá gói dịch vụ
+- Trang đăng ký / đăng nhập (hỗ trợ đăng nhập bằng Google OAuth)
+- Trang quên mật khẩu / đặt lại mật khẩu
+- Trang liên hệ / hỗ trợ
 
----
+### 1.2 Hệ Thống Xác Thực & Phân Quyền
 
-## Giai Đoạn 1: Khởi Tạo Dự Án & Thiết Lập Môi Trường (Tuần 1–2)
+- Đăng ký, đăng nhập, đăng xuất (JWT + Refresh Token)
+- Đăng nhập qua Google (OAuth 2.0)
+- Xác minh email khi đăng ký
+- Quên mật khẩu / đặt lại mật khẩu qua email
+- Phân quyền 3 role: **user** (free), **premium**, **admin**
+- Middleware bảo vệ route theo role
 
-> **Mục tiêu:** Thiết lập toàn bộ nền tảng kỹ thuật, đảm bảo frontend, backend, database chạy được ở môi trường local.
+### 1.3 Dashboard Người Dùng
 
-### Công việc 1.1 – Khởi tạo repository & cấu trúc thư mục
-- Tạo repo trên GitHub, thiết lập `.gitignore`, nhánh `main` / `dev`
-- Tạo cấu trúc thư mục: `client/` (Next.js), `server/` (Express.js)
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Repo GitHub với cấu trúc thư mục rõ ràng
+- Tổng quan: số nội dung đã tạo, số token đã dùng, giới hạn còn lại
+- Danh sách nội dung gần đây (truy cập nhanh)
+- Biểu đồ thống kê sử dụng theo ngày/tuần/tháng
+- Thông báo hệ thống (hết hạn gói, cập nhật tính năng, …)
 
-### Công việc 1.2 – Khởi tạo frontend (Next.js)
-- Chạy `npx create-next-app@latest` với TypeScript, Tailwind CSS, App Router
-- Cấu hình `next.config.js`, `tailwind.config.ts`
-- Tạo layout chung (`Header`, `Sidebar`, `Footer`)
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** App Next.js chạy được tại `localhost:3000`
+### 1.4 Sinh Nội Dung AI (Chức Năng Cốt Lõi)
 
-### Công việc 1.3 – Khởi tạo backend (Express.js)
-- Tạo project Node.js, cài đặt Express.js, cấu hình cấu trúc MVC
-- Tạo file `app.js` (entry point), cấu hình CORS, body-parser, error handler
-- Tạo file `.env.example` với các biến môi trường mẫu
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Server Express chạy được tại `localhost:5000`
+- Chọn loại nội dung: blog, quảng cáo, email marketing, mô tả sản phẩm, bài mạng xã hội, SEO meta, kịch bản video, tiêu đề/slogan
+- Nhập chủ đề / từ khóa / mô tả yêu cầu
+- Chọn tone giọng (chuyên nghiệp, thân thiện, hài hước, nghiêm túc, sáng tạo, …)
+- Chọn ngôn ngữ đầu ra (Tiếng Việt, English, …)
+- Chọn model AI (GPT-4, Llama, hoặc model đã fine-tune)
+- Tùy chỉnh độ dài nội dung (ngắn / vừa / dài), nhiệt độ sáng tạo (temperature)
+- Streaming real-time (hiển thị nội dung sinh dần giống ChatGPT)
+- Chỉnh sửa nội dung trực tiếp sau khi sinh
+- Tạo lại (regenerate) nội dung
+- Lưu nội dung vào dự án / thư mục
 
-### Công việc 1.4 – Kết nối MongoDB
-- Cài đặt Mongoose, viết module kết nối database (`config/db.js`)
-- Tạo database `ai-copywriter` trên MongoDB local hoặc MongoDB Atlas
-- Kiểm tra kết nối thành công
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Backend kết nối thành công với MongoDB
+### 1.5 Quản Lý Nội Dung
 
-### Công việc 1.5 – Thiết kế database schema
-- Thiết kế 4 collection: `Users`, `Contents`, `Templates`, `FineTuneJobs`
-- Tạo Mongoose model cho mỗi collection
-- Định nghĩa validation, index, virtual fields
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 4 file model trong `server/src/models/`
+- Danh sách tất cả nội dung đã tạo (phân trang, sắp xếp)
+- Tìm kiếm nội dung theo từ khóa, lọc theo loại / ngày tạo / dự án
+- Xem chi tiết, chỉnh sửa, xóa nội dung
+- Đánh dấu yêu thích (favorite)
+- Gắn tag / nhãn cho nội dung
+- Xuất nội dung: Copy to Clipboard, PDF, Word (.docx)
+- Lịch sử phiên bản nội dung (version history) – xem lại các lần chỉnh sửa
 
-### Công việc 1.6 – Cấu hình Docker
-- Viết `Dockerfile` cho frontend và backend
-- Viết `docker-compose.yml` (gồm app + MongoDB)
-- Kiểm tra chạy được toàn bộ hệ thống bằng `docker-compose up`
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** File `docker-compose.yml`, hệ thống chạy được qua Docker
+### 1.6 Quản Lý Dự Án (Project)
 
-### Công việc 1.7 – Thiết lập công cụ phát triển
-- Cấu hình ESLint, Prettier cho cả frontend và backend
-- Cài đặt `nodemon` cho backend hot-reload
-- Thiết lập Postman collection cho API testing
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Môi trường dev hoàn chỉnh, sẵn sàng phát triển
+- Tạo dự án để nhóm các nội dung theo chiến dịch / khách hàng / chủ đề
+- CRUD dự án (tạo, sửa, xóa, xem chi tiết)
+- Gán nội dung vào dự án
+- Xem tổng quan dự án: số nội dung, loại nội dung, ngày tạo
 
----
+### 1.7 Hệ Thống Template
 
-## Giai Đoạn 2: Xác Thực & Quản Lý Người Dùng (Tuần 3–4)
-
-> **Mục tiêu:** Hoàn thành hệ thống đăng ký, đăng nhập, phân quyền để bảo vệ các API phía sau.
-
-### Công việc 2.1 – Xây dựng API đăng ký & đăng nhập
-- `POST /api/auth/register` – Đăng ký (hash password bằng bcrypt)
-- `POST /api/auth/login` – Đăng nhập (trả về JWT access token + refresh token)
-- `POST /api/auth/refresh-token` – Làm mới token
-- Xử lý validation (email hợp lệ, password đủ mạnh)
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 3 API auth hoạt động, test bằng Postman
-
-### Công việc 2.2 – Xây dựng middleware xác thực JWT
-- Viết middleware `auth.js` kiểm tra token trong header `Authorization`
-- Xử lý các trường hợp: token hết hạn, token không hợp lệ, không có token
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Middleware bảo vệ các route cần xác thực
-
-### Công việc 2.3 – Xây dựng API quản lý người dùng
-- `GET /api/auth/me` – Lấy thông tin user hiện tại
-- `GET /api/users/profile` – Xem profile
-- `PUT /api/users/profile` – Cập nhật profile (tên, avatar)
-- `GET /api/users/usage` – Xem thống kê sử dụng (số lần sinh nội dung)
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 4 API user hoạt động
-
-### Công việc 2.4 – Tạo giao diện đăng ký / đăng nhập
-- Trang `/login` – Form đăng nhập (email + password)
-- Trang `/register` – Form đăng ký (tên + email + password)
-- Lưu token vào cookie/localStorage, redirect sau khi đăng nhập
-- Xử lý hiển thị lỗi validation
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 2 trang auth với UI hoàn chỉnh
-
-### Công việc 2.5 – Tạo giao diện profile người dùng
-- Trang `/profile` – Hiển thị thông tin user, form cập nhật
-- Hiển thị thống kê sử dụng (tổng nội dung đã tạo, giới hạn tháng)
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Trang profile
-
-### Công việc 2.6 – Phân quyền người dùng
-- Định nghĩa 3 role: `free`, `premium`, `admin`
-- Giới hạn số lần sinh nội dung cho user `free` (ví dụ: 10 lần/tháng)
-- Viết middleware kiểm tra quyền truy cập
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Hệ thống phân quyền hoạt động
-
----
-
-## Giai Đoạn 3: Tích Hợp AI & Sinh Nội Dung (Tuần 5–7)
-
-> **Mục tiêu:** Tích hợp GPT-4, xây dựng trang sinh nội dung – chức năng cốt lõi của ứng dụng.
-
-### Công việc 3.1 – Tích hợp OpenAI API (GPT-4)
-- Cài đặt thư viện `openai`
-- Viết service `gptService.js` gọi API ChatCompletion
-- Xử lý prompt engineering: xây dựng system prompt + user prompt theo loại nội dung
-- Xử lý error (rate limit, token limit, API down)
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** Service gọi GPT-4 hoạt động, test được qua script
-
-### Công việc 3.2 – Xây dựng AI Service Layer
-- Tạo `aiService.js` – lớp trung gian điều phối giữa các model (GPT-4, Llama)
-- Thiết kế interface chung: `generateContent(prompt, options)` → trả về kết quả
-- Hỗ trợ chuyển đổi model linh hoạt
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** AI Service Layer hoàn chỉnh
-
-### Công việc 3.3 – Xây dựng API sinh nội dung
-- `POST /api/content/generate` – Nhận yêu cầu từ user, gọi AI, trả về nội dung
-- Tham số đầu vào: `type`, `prompt`, `tone`, `language`, `model`
-- Lưu kết quả vào database (collection `Contents`)
-- Cập nhật thống kê sử dụng của user
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** API sinh nội dung hoạt động end-to-end
-
-### Công việc 3.4 – Tạo giao diện trang sinh nội dung
-- Trang `/generate` – Giao diện chính của ứng dụng
-- Form nhập: chọn loại nội dung, nhập chủ đề/từ khóa, chọn tone, chọn ngôn ngữ
-- Khu vực hiển thị kết quả với khả năng chỉnh sửa trực tiếp
-- Nút Copy, Lưu, Tạo lại
-- **Thời gian:** 3 ngày
-- **Sản phẩm:** Trang sinh nội dung với UI/UX hoàn chỉnh
-
-### Công việc 3.5 – Hỗ trợ nhiều loại nội dung
-- Định nghĩa 6 loại: Blog, Quảng cáo, Email marketing, Mô tả sản phẩm, Bài mạng xã hội, SEO meta
-- Mỗi loại có prompt template riêng phù hợp
-- Giao diện chọn loại nội dung dạng card/grid
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 6 loại nội dung với prompt template tương ứng
-
-### Công việc 3.6 – Hỗ trợ chọn tone giọng & ngôn ngữ
-- Danh sách tone: Chuyên nghiệp, Thân thiện, Hài hước, Nghiêm túc, Sáng tạo
-- Danh sách ngôn ngữ: Tiếng Việt, English, và các ngôn ngữ phổ biến khác
-- Tích hợp vào prompt khi gọi AI
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Dropdown chọn tone + ngôn ngữ trên giao diện
-
-### Công việc 3.7 – Hiệu ứng streaming (real-time)
-- Sử dụng Server-Sent Events (SSE) hoặc streaming response
-- Nội dung AI hiện dần từng từ trên giao diện (giống ChatGPT)
-- Hiển thị trạng thái loading phù hợp
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** Trải nghiệm sinh nội dung real-time
-
-### Công việc 3.8 – Tạo trang Dashboard
-- Trang `/dashboard` – Trang chủ sau khi đăng nhập
-- Hiển thị: thống kê sử dụng, nội dung gần đây, shortcut tạo nội dung mới
-- Biểu đồ thống kê đơn giản (số nội dung theo ngày/tuần)
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** Trang dashboard
-
----
-
-## Giai Đoạn 4: Quản Lý Nội Dung & Template (Tuần 8–9)
-
-> **Mục tiêu:** Hoàn thiện CRUD nội dung, tìm kiếm/lọc, hệ thống template để tái sử dụng.
-
-### Công việc 4.1 – Xây dựng CRUD API nội dung
-- `GET /api/content` – Lấy danh sách nội dung (phân trang, lọc theo type/ngày)
-- `GET /api/content/:id` – Xem chi tiết
-- `PUT /api/content/:id` – Cập nhật (chỉnh sửa nội dung đã sinh)
-- `DELETE /api/content/:id` – Xóa nội dung
-- Hỗ trợ đánh dấu yêu thích (`isFavorite`)
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 4 API CRUD nội dung
-
-### Công việc 4.2 – Tạo giao diện lịch sử nội dung
-- Trang `/history` – Danh sách nội dung đã tạo (dạng bảng/card)
-- Chức năng: tìm kiếm theo từ khóa, lọc theo loại/ngày, sắp xếp
-- Phân trang
-- Xem chi tiết, chỉnh sửa, xóa từng nội dung
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** Trang lịch sử nội dung
-
-### Công việc 4.3 – Xuất nội dung
-- Nút Copy to Clipboard
-- Xuất ra file PDF (sử dụng thư viện `jspdf` hoặc `html2pdf`)
-- Xuất ra file Word (.docx)
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** 3 chức năng xuất nội dung
-
-### Công việc 4.4 – Xây dựng CRUD API template
-- `GET /api/templates` – Danh sách template (public + của user)
-- `POST /api/templates` – Tạo template mới
-- `PUT /api/templates/:id` – Cập nhật template
-- `DELETE /api/templates/:id` – Xóa template
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** 4 API CRUD template
-
-### Công việc 4.5 – Tạo thư viện template có sẵn
-- Tạo 10–15 template mẫu cho các ngành nghề phổ biến
-- Ví dụ: "Mô tả sản phẩm thời trang", "Email chào hàng B2B", "Bài blog công nghệ"
-- Seed data vào database
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Bộ template mẫu
-
-### Công việc 4.6 – Tạo giao diện quản lý template
-- Trang `/templates` – Duyệt thư viện template, tạo template tùy chỉnh
+- Thư viện template có sẵn (hệ thống) cho từng loại nội dung và ngành nghề
+- Người dùng tạo template tùy chỉnh riêng
+- Template có biến động (variables) – ví dụ: `{{tên_sản_phẩm}}`, `{{giá}}`
 - Chọn template → điền biến → sinh nội dung
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** Trang quản lý template
+- Phân loại template theo danh mục (category)
+- Đánh giá / xếp hạng template (cho template public)
+
+### 1.8 Gói Dịch Vụ & Thanh Toán
+
+- Định nghĩa các gói: Free, Pro, Enterprise (khác nhau về giới hạn token, model, tính năng)
+- Trang chọn gói & nâng cấp
+- Tích hợp thanh toán (Stripe hoặc VNPay / MoMo cho thị trường Việt Nam)
+- Quản lý subscription: gia hạn, hủy, đổi gói
+- Lịch sử thanh toán
+- Hóa đơn tự động (invoice)
+
+### 1.9 Quản Lý Hồ Sơ Người Dùng
+
+- Xem và cập nhật thông tin cá nhân (tên, avatar, email, mật khẩu)
+- Thống kê sử dụng chi tiết: token đã dùng, số nội dung, gói hiện tại
+- Quản lý API key cá nhân (cho phép gọi API từ bên ngoài)
+- Cài đặt thông báo (email notification, in-app notification)
+
+### 1.10 Fine-tuning Model AI
+
+- Upload dataset huấn luyện (JSON/CSV)
+- Tạo job fine-tuning (chọn base model, ngành nghề, tham số)
+- Theo dõi trạng thái job (pending / training / completed / failed)
+- Danh sách model đã fine-tune
+- Sử dụng model fine-tuned để sinh nội dung
+
+### 1.11 Hệ Thống Thông Báo
+
+- Thông báo in-app (real-time qua WebSocket hoặc polling)
+- Thông báo qua email (xác minh tài khoản, đặt lại mật khẩu, hết hạn gói, fine-tune hoàn thành)
+- Quản lý cài đặt thông báo
 
 ---
 
-## Giai Đoạn 5: Tích Hợp Llama & Fine-tuning (Tuần 10–12)
+## 2. Trang Quản Trị Admin
 
-> **Mục tiêu:** Tích hợp mô hình Llama mã nguồn mở, xây dựng hệ thống fine-tuning theo ngành nghề.
+### 2.1 Dashboard Admin
 
-### Công việc 5.1 – Tích hợp Llama model
-- Cài đặt Ollama hoặc sử dụng Llama API endpoint
-- Viết service `llamaService.js` tương tự `gptService.js`
-- Tích hợp vào AI Service Layer, cho phép user chọn model
-- So sánh kết quả GPT-4 vs Llama
-- **Thời gian:** 3 ngày
-- **Sản phẩm:** Llama model hoạt động song song với GPT-4
+- Tổng quan hệ thống: tổng user, tổng nội dung, tổng doanh thu, số user hoạt động
+- Biểu đồ tăng trưởng user, nội dung, doanh thu theo thời gian
+- Thống kê sử dụng AI: tổng token tiêu thụ, phân bổ theo model
 
-### Công việc 5.2 – Xây dựng API fine-tuning
-- `POST /api/fine-tune/upload-dataset` – Upload file dữ liệu huấn luyện (JSON/CSV)
-- `POST /api/fine-tune/create` – Tạo job fine-tuning mới
-- `GET /api/fine-tune/jobs` – Danh sách jobs
-- `GET /api/fine-tune/jobs/:id` – Trạng thái job (pending / training / completed / failed)
-- `GET /api/fine-tune/models` – Danh sách model đã fine-tune
-- Xử lý file upload bằng `multer`
-- **Thời gian:** 4 ngày
-- **Sản phẩm:** 5 API fine-tuning
+### 2.2 Quản Lý Người Dùng
 
-### Công việc 5.3 – Xây dựng fine-tuning service
-- Viết `fineTuneService.js` – gọi OpenAI Fine-tuning API hoặc huấn luyện Llama local
-- Xử lý format dữ liệu (chuyển đổi dataset sang format yêu cầu)
-- Cơ chế queue xử lý fine-tuning job (tránh chạy đồng thời)
-- **Thời gian:** 4 ngày
-- **Sản phẩm:** Service fine-tuning hoạt động
+- Danh sách tất cả user (tìm kiếm, lọc theo role/gói/trạng thái)
+- Xem chi tiết user: thông tin, thống kê sử dụng, lịch sử thanh toán
+- Kích hoạt / Vô hiệu hóa tài khoản
+- Thay đổi role (user → premium → admin)
+- Xóa tài khoản
 
-### Công việc 5.4 – Tạo giao diện quản lý fine-tuning
-- Trang `/fine-tune` – Quản lý toàn bộ fine-tuning
-- Form upload dataset (kéo thả file)
-- Form tạo job mới (chọn base model, ngành nghề, tham số)
-- Bảng theo dõi trạng thái các jobs (real-time cập nhật)
-- Danh sách model đã fine-tune, nút sử dụng để sinh nội dung
-- **Thời gian:** 3 ngày
-- **Sản phẩm:** Trang fine-tuning
+### 2.3 Quản Lý Nội Dung
 
-### Công việc 5.5 – Sử dụng model đã fine-tune
-- Cho phép user chọn model đã fine-tune khi sinh nội dung
-- Hiển thị danh sách model fine-tuned trong dropdown trên trang `/generate`
-- Gắn nhãn ngành nghề cho mỗi model
-- **Thời gian:** 1 ngày
-- **Sản phẩm:** Tích hợp model fine-tuned vào luồng sinh nội dung
+- Xem tất cả nội dung trên hệ thống
+- Tìm kiếm, lọc nội dung
+- Xóa nội dung vi phạm
+- Thống kê nội dung theo loại, ngôn ngữ, model
 
----
+### 2.4 Quản Lý Template
 
-## Giai Đoạn 6: Kiểm Thử, Tối Ưu & Triển Khai (Tuần 13–14)
+- CRUD template hệ thống (template mặc định cho tất cả user)
+- Phân loại template theo category
+- Duyệt / ẩn template do user tạo (nếu cho phép public)
 
-> **Mục tiêu:** Đảm bảo chất lượng, tối ưu hiệu suất, và triển khai ứng dụng.
+### 2.5 Quản Lý Gói Dịch Vụ & Thanh Toán
 
-### Công việc 6.1 – Kiểm thử & sửa lỗi
-- Kiểm thử từng API bằng Postman (functional testing)
-- Kiểm thử giao diện trên nhiều trình duyệt (Chrome, Firefox, Safari)
-- Kiểm thử responsive trên mobile/tablet
-- Kiểm thử luồng end-to-end: đăng ký → đăng nhập → sinh nội dung → lưu → xuất
-- Sửa tất cả bug phát hiện được
-- **Thời gian:** 4 ngày
-- **Sản phẩm:** Ứng dụng hoạt động ổn định, không lỗi nghiêm trọng
+- Cấu hình các gói (giá, giới hạn token, tính năng)
+- Xem lịch sử thanh toán toàn hệ thống
+- Thống kê doanh thu
+- Xử lý yêu cầu hoàn tiền
 
-### Công việc 6.2 – Tối ưu hiệu suất & bảo mật
-- Thêm rate limiting (`express-rate-limit`) cho các API nhạy cảm
-- Caching response AI bằng Redis hoặc in-memory cache
-- Tối ưu query MongoDB (thêm index cho các trường thường tìm kiếm)
-- Validate và sanitize toàn bộ input (chống XSS, injection)
-- Helmet.js cho HTTP security headers
-- **Thời gian:** 2 ngày
-- **Sản phẩm:** Hệ thống bảo mật và nhanh hơn
+### 2.6 Quản Lý Model AI
 
-### Công việc 6.3 – Triển khai & viết tài liệu
-- Deploy backend lên VPS hoặc dịch vụ cloud (Railway, Render, AWS)
-- Deploy frontend lên Vercel
-- Deploy MongoDB lên MongoDB Atlas
-- Cấu hình domain, HTTPS
-- Viết tài liệu hướng dẫn sử dụng cho người dùng
-- Cập nhật README với hướng dẫn cài đặt chi tiết
-- **Thời gian:** 3 ngày
-- **Sản phẩm:** Ứng dụng live trên internet, tài liệu hoàn chỉnh
+- Danh sách model đang hoạt động (GPT-4, Llama, fine-tuned models)
+- Bật / tắt model
+- Cấu hình giới hạn token, giá mỗi token cho từng model
+- Quản lý API key kết nối với OpenAI / Ollama
+
+### 2.7 Cài Đặt Hệ Thống
+
+- Cấu hình chung: tên website, logo, thông tin liên hệ
+- Cấu hình email SMTP (gửi email thông báo)
+- Cấu hình rate limiting
+- Quản lý prompt mặc định (system prompt cho từng loại nội dung)
+- Cấu hình bảo trì (maintenance mode)
+
+### 2.8 Nhật Ký Hệ Thống (Audit Log)
+
+- Ghi lại các hành động quan trọng: đăng nhập, thay đổi role, xóa nội dung, cấu hình hệ thống
+- Lọc log theo thời gian, user, hành động
+- Xuất log
 
 ---
 
-## Tổng Kết Thời Gian
+## 3. Thiết Kế Database (MongoDB)
 
-| Giai đoạn | Công việc | Ngày làm việc | Tuần |
-|-----------|-----------|---------------|------|
-| GĐ 1 – Khởi tạo & môi trường | 7 công việc | 9 ngày | Tuần 1–2 |
-| GĐ 2 – Xác thực & người dùng | 6 công việc | 9 ngày | Tuần 3–4 |
-| GĐ 3 – AI & sinh nội dung | 8 công việc | 15 ngày | Tuần 5–7 |
-| GĐ 4 – Nội dung & template | 6 công việc | 10 ngày | Tuần 8–9 |
-| GĐ 5 – Llama & fine-tuning | 5 công việc | 15 ngày | Tuần 10–12 |
-| GĐ 6 – Kiểm thử & triển khai | 3 công việc | 9 ngày | Tuần 13–14 |
-| **Tổng** | **35 công việc** | **67 ngày** | **14 tuần** |
+### Collection: Users
 
-> **Ghi chú:** Mỗi tuần tính 5 ngày làm việc (tổng 70 ngày trong 14 tuần). Thời gian dự phòng ~3 ngày dành cho nghiên cứu, debug và xử lý phát sinh.
+| Trường | Mô tả |
+|--------|-------|
+| email, password (hashed) | Thông tin đăng nhập |
+| name, avatar | Thông tin cá nhân |
+| role | `user` / `premium` / `admin` |
+| emailVerified | Đã xác minh email chưa |
+| googleId | ID đăng nhập Google (nếu có) |
+| subscriptionId (ref) | Gói dịch vụ hiện tại |
+| apiKey | API key cá nhân |
+| notificationSettings | Cài đặt thông báo |
+| isActive | Tài khoản hoạt động / bị khóa |
+| lastLoginAt | Lần đăng nhập cuối |
+
+### Collection: Subscriptions
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref) | User sở hữu |
+| planId (ref) | Gói dịch vụ |
+| status | `active` / `canceled` / `expired` |
+| currentPeriodStart, currentPeriodEnd | Chu kỳ hiện tại |
+| paymentMethod | Phương thức thanh toán |
+| autoRenew | Tự động gia hạn |
+
+### Collection: Plans
+
+| Trường | Mô tả |
+|--------|-------|
+| name | Tên gói (Free, Pro, Enterprise) |
+| price, currency, billingCycle | Giá và chu kỳ thanh toán |
+| tokenLimit | Giới hạn token / tháng |
+| features | Danh sách tính năng |
+| allowedModels | Model AI được phép sử dụng |
+| maxProjects | Số dự án tối đa |
+| isActive | Gói có đang bán không |
+
+### Collection: Payments
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref), subscriptionId (ref) | User và subscription |
+| amount, currency | Số tiền |
+| paymentMethod, transactionId | Thông tin giao dịch |
+| status | `pending` / `completed` / `failed` / `refunded` |
+| invoiceUrl | Link hóa đơn |
+
+### Collection: Projects
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref) | Người tạo |
+| name, description | Thông tin dự án |
+| contentCount | Số nội dung trong dự án |
+| isArchived | Đã lưu trữ |
+
+### Collection: Contents
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref), projectId (ref) | Người tạo và dự án |
+| title | Tiêu đề nội dung |
+| type | `blog` / `ad` / `email` / `product` / `social` / `seo` / `script` / `headline` |
+| prompt | Yêu cầu đầu vào của user |
+| generatedContent | Nội dung AI đã sinh |
+| model | Model AI đã sử dụng |
+| tone, language | Tone giọng và ngôn ngữ |
+| templateId (ref) | Template đã dùng (nếu có) |
+| tags | Danh sách tag |
+| isFavorite | Đánh dấu yêu thích |
+| tokensUsed | Số token đã dùng |
+| versions | Mảng lưu lịch sử các phiên bản chỉnh sửa |
+
+### Collection: Templates
+
+| Trường | Mô tả |
+|--------|-------|
+| name, description | Thông tin template |
+| type | Loại nội dung |
+| category | Danh mục (ngành nghề) |
+| promptTemplate | Nội dung prompt có biến động |
+| variables | Danh sách biến (tên, mô tả, giá trị mặc định) |
+| isSystem | Template hệ thống (admin tạo) hay user tạo |
+| isPublic | Công khai hay riêng tư |
+| createdBy (ref) | Người tạo |
+| rating, usageCount | Đánh giá và số lần sử dụng |
+
+### Collection: Categories
+
+| Trường | Mô tả |
+|--------|-------|
+| name, slug, description | Thông tin danh mục |
+| parentId (ref) | Danh mục cha (hỗ trợ phân cấp) |
+| icon | Icon hiển thị |
+| isActive | Đang sử dụng |
+
+### Collection: FineTuneJobs
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref) | Người tạo |
+| modelName, baseModel | Tên model và model gốc |
+| industry | Ngành nghề |
+| status | `pending` / `training` / `completed` / `failed` |
+| datasetPath | Đường dẫn file dataset |
+| config (epochs, learningRate, batchSize) | Tham số huấn luyện |
+| result (modelId, accuracy, trainingTime) | Kết quả |
+
+### Collection: Notifications
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref) | Người nhận |
+| type | `system` / `billing` / `fine-tune` / `account` |
+| title, message | Nội dung thông báo |
+| isRead | Đã đọc chưa |
+| link | Link liên quan (nếu có) |
+
+### Collection: UsageLogs
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref) | User |
+| action | `generate` / `regenerate` / `fine-tune` |
+| model | Model đã dùng |
+| tokensUsed | Số token |
+| contentId (ref) | Nội dung liên quan |
+| ip, userAgent | Thông tin request |
+
+### Collection: AuditLogs
+
+| Trường | Mô tả |
+|--------|-------|
+| userId (ref) | Người thực hiện |
+| action | Hành động (`user.login`, `user.role_change`, `content.delete`, `system.config_update`, …) |
+| targetType, targetId | Đối tượng bị tác động |
+| details | Chi tiết bổ sung |
+| ip | Địa chỉ IP |
+
+### Collection: SystemSettings
+
+| Trường | Mô tả |
+|--------|-------|
+| key | Tên cấu hình (`site_name`, `smtp_host`, `maintenance_mode`, …) |
+| value | Giá trị |
+| description | Mô tả |
+| updatedBy (ref) | Admin cập nhật lần cuối |
 
 ---
 
-## Ghi Chú
+## 4. Giao Diện Cần Xây Dựng
 
-- Dự án do **1 người thực hiện**, nên mỗi giai đoạn cần hoàn thành tuần tự.
-- Ưu tiên hoàn thành **Giai đoạn 1–3** trước để có sản phẩm chạy được sớm nhất (MVP).
-- Có thể điều chỉnh thời gian linh hoạt tùy tiến độ thực tế.
-- Nên commit code thường xuyên và viết commit message rõ ràng.
+### Trang Công Khai
+- `/` – Landing page (giới thiệu, tính năng, bảng giá)
+- `/login` – Đăng nhập
+- `/register` – Đăng ký
+- `/forgot-password` – Quên mật khẩu
+- `/reset-password` – Đặt lại mật khẩu
+- `/contact` – Liên hệ
+
+### Trang Người Dùng (yêu cầu đăng nhập)
+- `/dashboard` – Dashboard tổng quan
+- `/generate` – Sinh nội dung AI
+- `/contents` – Quản lý nội dung (danh sách, tìm kiếm, lọc)
+- `/contents/:id` – Chi tiết nội dung
+- `/projects` – Quản lý dự án
+- `/projects/:id` – Chi tiết dự án
+- `/templates` – Thư viện template
+- `/fine-tune` – Quản lý fine-tuning
+- `/profile` – Hồ sơ cá nhân & cài đặt
+- `/billing` – Gói dịch vụ & thanh toán
+- `/notifications` – Thông báo
+
+### Trang Admin (yêu cầu role admin)
+- `/admin` – Dashboard admin
+- `/admin/users` – Quản lý user
+- `/admin/contents` – Quản lý nội dung
+- `/admin/templates` – Quản lý template hệ thống
+- `/admin/categories` – Quản lý danh mục
+- `/admin/plans` – Quản lý gói dịch vụ
+- `/admin/payments` – Quản lý thanh toán
+- `/admin/models` – Quản lý model AI
+- `/admin/settings` – Cài đặt hệ thống
+- `/admin/audit-logs` – Nhật ký hệ thống
+
+---
+
+## 5. Công Nghệ Sử Dụng
+
+| Phần | Công nghệ |
+|------|-----------|
+| Frontend | Next.js (React), TypeScript, Tailwind CSS, Axios |
+| Backend | Node.js, Express.js, Mongoose |
+| Database | MongoDB |
+| AI | OpenAI API (GPT-4), Llama (Ollama), LangChain.js |
+| Xác thực | JWT, Google OAuth 2.0 |
+| Thanh toán | Stripe / VNPay |
+| Real-time | Server-Sent Events (SSE) / WebSocket |
+| File upload | Multer |
+| Email | Nodemailer + SMTP |
+| DevOps | Docker, Docker Compose, Vercel, MongoDB Atlas |
+
+---
+
+## 6. Ghi Chú
+
+- Dự án do 1 người thực hiện.
+- Ưu tiên hoàn thành **xác thực → sinh nội dung → quản lý nội dung** trước (MVP).
+- Trang admin và thanh toán phát triển sau khi các chức năng cốt lõi ổn định.
+- Database cần đánh index phù hợp cho các trường tìm kiếm và lọc thường xuyên.
