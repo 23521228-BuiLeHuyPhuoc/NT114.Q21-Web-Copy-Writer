@@ -41,7 +41,7 @@
 |------------|--------|
 | **OpenAI API (GPT-4)** | API sinh nội dung chính |
 | **Llama (Meta)** | Mô hình mã nguồn mở, hỗ trợ fine-tuning |
-| **LangChain** | Framework hỗ trợ tích hợp LLM |
+| **LangChain.js** | Framework JavaScript hỗ trợ tích hợp LLM cho Node.js |
 
 ### Cơ Sở Dữ Liệu
 | Công nghệ | Mô tả |
@@ -246,7 +246,7 @@
   "_id": "ObjectId",
   "userId": "ObjectId (ref: Users)",
   "modelName": "string",
-  "baseModel": "string (gpt-4 | llama)",
+  "baseModel": "string (gpt-3.5-turbo | llama)",
   "industry": "string",
   "status": "string (pending | training | completed | failed)",
   "datasetPath": "string",
@@ -431,7 +431,7 @@ NODE_ENV=development
 MONGODB_URI=mongodb://localhost:27017/ai-copywriter
 
 # JWT
-JWT_SECRET=your-jwt-secret-key
+JWT_SECRET=your-jwt-secret-key  # Thay bằng chuỗi ngẫu nhiên mạnh, ví dụ: openssl rand -hex 64
 JWT_EXPIRES_IN=7d
 
 # OpenAI
