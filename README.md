@@ -1,478 +1,346 @@
-# AI Copywriter – Website Hỗ Trợ Viết Nội Dung Bằng AI
+# AI Copywriter – Kế Hoạch Công Việc Đồ Án
 
-## 1. Giới Thiệu
+## Thông Tin Đồ Án
 
-**AI Copywriter** là một ứng dụng web hỗ trợ người dùng viết nội dung tự động bằng trí tuệ nhân tạo. Hệ thống tích hợp các mô hình ngôn ngữ lớn (LLM) như **GPT-4** và **Llama** để sinh nội dung chất lượng cao, phù hợp với nhiều ngành nghề khác nhau.
-
-### Mục Tiêu
-
-- Xây dựng nền tảng web cho phép người dùng tạo nội dung tự động (bài viết, quảng cáo, email marketing, mô tả sản phẩm, ...).
-- Tích hợp GPT-4 / Llama để sinh nội dung thông minh.
-- Xây dựng API RESTful cho AI model để xử lý nội dung trên backend.
-- Tích hợp fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể.
-
-### Thành Viên
-
-| STT | Họ và Tên | Vai Trò |
-|-----|-----------|---------|
-| 1   | Bùi Lê Huy Phước | Fullstack Developer (Frontend + Backend + AI Integration) |
+- **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
+- **Môn học:** NT114 – Mạng máy tính nâng cao
+- **Thực hiện:** Bùi Lê Huy Phước (1 thành viên)
+- **Công nghệ:** Node.js (Express), React.js (Next.js), MongoDB, GPT-4 / Llama
 
 ---
 
-## 2. Công Nghệ Sử Dụng
+## Tổng Quan Công Việc
 
-### Frontend
-| Công nghệ | Mô tả |
-|------------|--------|
-| **Next.js (React.js)** | Framework React hỗ trợ SSR/SSG, tối ưu SEO |
-| **Tailwind CSS** | Utility-first CSS framework cho giao diện responsive |
-| **Axios** | HTTP client để gọi API từ frontend |
+Dự án được chia thành **6 giai đoạn** với tổng cộng **35 công việc chính**. Mỗi công việc được phân rõ phần việc cụ thể, thời gian ước tính, và sản phẩm đầu ra.
 
-### Backend
-| Công nghệ | Mô tả |
-|------------|--------|
-| **Node.js** | Runtime JavaScript phía server |
-| **Express.js** | Web framework cho Node.js |
-| **Mongoose** | ODM cho MongoDB |
-| **JWT (jsonwebtoken)** | Xác thực và phân quyền người dùng |
-
-### AI / LLM
-| Công nghệ | Mô tả |
-|------------|--------|
-| **OpenAI API (GPT-4)** | API sinh nội dung chính |
-| **Llama (Meta)** | Mô hình mã nguồn mở, hỗ trợ fine-tuning |
-| **LangChain.js** | Framework JavaScript hỗ trợ tích hợp LLM cho Node.js |
-
-### Cơ Sở Dữ Liệu
-| Công nghệ | Mô tả |
-|------------|--------|
-| **MongoDB** | NoSQL database lưu trữ dữ liệu người dùng và nội dung |
-
-### DevOps / Khác
-| Công nghệ | Mô tả |
-|------------|--------|
-| **Docker** | Container hóa ứng dụng |
-| **Git / GitHub** | Quản lý mã nguồn |
-| **Postman** | Kiểm thử API |
+| Giai đoạn | Tên | Thời gian | Số công việc |
+|-----------|-----|-----------|--------------|
+| 1 | Khởi tạo dự án & thiết lập môi trường | Tuần 1–2 | 7 |
+| 2 | Xác thực & quản lý người dùng | Tuần 3–4 | 6 |
+| 3 | Tích hợp AI & sinh nội dung | Tuần 5–7 | 8 |
+| 4 | Quản lý nội dung & template | Tuần 8–9 | 6 |
+| 5 | Tích hợp Llama & fine-tuning | Tuần 10–12 | 5 |
+| 6 | Kiểm thử, tối ưu & triển khai | Tuần 13–14 | 3 |
 
 ---
 
-## 3. Kiến Trúc Hệ Thống
+## Giai Đoạn 1: Khởi Tạo Dự Án & Thiết Lập Môi Trường (Tuần 1–2)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Client (Browser)                   │
-│                  Next.js (React.js) Frontend             │
-└─────────────────────┬───────────────────────────────────┘
-                      │ HTTP/HTTPS (REST API)
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Backend (Express.js)                    │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │ Auth Module  │  │ Content API  │  │ Fine-tune API │  │
-│  │ (JWT)        │  │ (CRUD)       │  │               │  │
-│  └─────────────┘  └──────┬───────┘  └───────┬───────┘  │
-│                          │                   │          │
-│                 ┌────────▼───────────────────▼────────┐ │
-│                 │        AI Service Layer             │ │
-│                 │  ┌──────────┐  ┌─────────────────┐  │ │
-│                 │  │ GPT-4    │  │ Llama (Local/   │  │ │
-│                 │  │ (OpenAI) │  │  Cloud)          │  │ │
-│                 │  └──────────┘  └─────────────────┘  │ │
-│                 └────────────────────────────────────┘ │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│                    MongoDB Database                      │
-│  ┌──────────┐  ┌───────────┐  ┌───────────────────────┐ │
-│  │ Users     │  │ Contents  │  │ Fine-tune Configs     │ │
-│  └──────────┘  └───────────┘  └───────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-```
+> **Mục tiêu:** Thiết lập toàn bộ nền tảng kỹ thuật, đảm bảo frontend, backend, database chạy được ở môi trường local.
 
----
+### Công việc 1.1 – Khởi tạo repository & cấu trúc thư mục
+- Tạo repo trên GitHub, thiết lập `.gitignore`, nhánh `main` / `dev`
+- Tạo cấu trúc thư mục: `client/` (Next.js), `server/` (Express.js)
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Repo GitHub với cấu trúc thư mục rõ ràng
 
-## 4. Tính Năng Chính
+### Công việc 1.2 – Khởi tạo frontend (Next.js)
+- Chạy `npx create-next-app@latest` với TypeScript, Tailwind CSS, App Router
+- Cấu hình `next.config.js`, `tailwind.config.ts`
+- Tạo layout chung (`Header`, `Sidebar`, `Footer`)
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** App Next.js chạy được tại `localhost:3000`
 
-### 4.1 Quản Lý Người Dùng
-- Đăng ký / Đăng nhập (JWT Authentication)
-- Quản lý hồ sơ cá nhân
-- Phân quyền người dùng (Free / Premium)
+### Công việc 1.3 – Khởi tạo backend (Express.js)
+- Tạo project Node.js, cài đặt Express.js, cấu hình cấu trúc MVC
+- Tạo file `app.js` (entry point), cấu hình CORS, body-parser, error handler
+- Tạo file `.env.example` với các biến môi trường mẫu
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Server Express chạy được tại `localhost:5000`
 
-### 4.2 Sinh Nội Dung AI
-- Chọn loại nội dung (bài viết blog, quảng cáo, email, mô tả sản phẩm, bài đăng mạng xã hội, ...)
-- Nhập từ khóa / chủ đề / yêu cầu cụ thể
-- Chọn tone giọng (chuyên nghiệp, thân thiện, hài hước, ...)
-- Chọn ngôn ngữ đầu ra
-- Sinh nội dung bằng GPT-4 hoặc Llama
-- Chỉnh sửa và lưu nội dung đã sinh
+### Công việc 1.4 – Kết nối MongoDB
+- Cài đặt Mongoose, viết module kết nối database (`config/db.js`)
+- Tạo database `ai-copywriter` trên MongoDB local hoặc MongoDB Atlas
+- Kiểm tra kết nối thành công
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Backend kết nối thành công với MongoDB
 
-### 4.3 Quản Lý Nội Dung
-- Lưu trữ lịch sử nội dung đã tạo
-- Tìm kiếm và lọc nội dung
-- Xuất nội dung (Copy, PDF, Word)
-- Đánh dấu nội dung yêu thích
+### Công việc 1.5 – Thiết kế database schema
+- Thiết kế 4 collection: `Users`, `Contents`, `Templates`, `FineTuneJobs`
+- Tạo Mongoose model cho mỗi collection
+- Định nghĩa validation, index, virtual fields
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 4 file model trong `server/src/models/`
 
-### 4.4 Fine-tuning Model
-- Tạo cấu hình fine-tuning theo ngành nghề
-- Upload dữ liệu huấn luyện (dataset)
-- Theo dõi tiến trình fine-tuning
-- Sử dụng model đã fine-tune để sinh nội dung chuyên ngành
+### Công việc 1.6 – Cấu hình Docker
+- Viết `Dockerfile` cho frontend và backend
+- Viết `docker-compose.yml` (gồm app + MongoDB)
+- Kiểm tra chạy được toàn bộ hệ thống bằng `docker-compose up`
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** File `docker-compose.yml`, hệ thống chạy được qua Docker
 
-### 4.5 Template Nội Dung
-- Thư viện template có sẵn cho từng loại nội dung
-- Tạo template tùy chỉnh
-- Chia sẻ template
+### Công việc 1.7 – Thiết lập công cụ phát triển
+- Cấu hình ESLint, Prettier cho cả frontend và backend
+- Cài đặt `nodemon` cho backend hot-reload
+- Thiết lập Postman collection cho API testing
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Môi trường dev hoàn chỉnh, sẵn sàng phát triển
 
 ---
 
-## 5. Thiết Kế API RESTful
+## Giai Đoạn 2: Xác Thực & Quản Lý Người Dùng (Tuần 3–4)
 
-### 5.1 Authentication
+> **Mục tiêu:** Hoàn thành hệ thống đăng ký, đăng nhập, phân quyền để bảo vệ các API phía sau.
 
-| Method | Endpoint | Mô tả |
-|--------|----------|--------|
-| POST | `/api/auth/register` | Đăng ký tài khoản |
-| POST | `/api/auth/login` | Đăng nhập |
-| POST | `/api/auth/refresh-token` | Làm mới access token |
-| GET | `/api/auth/me` | Lấy thông tin người dùng hiện tại |
+### Công việc 2.1 – Xây dựng API đăng ký & đăng nhập
+- `POST /api/auth/register` – Đăng ký (hash password bằng bcrypt)
+- `POST /api/auth/login` – Đăng nhập (trả về JWT access token + refresh token)
+- `POST /api/auth/refresh-token` – Làm mới token
+- Xử lý validation (email hợp lệ, password đủ mạnh)
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 3 API auth hoạt động, test bằng Postman
 
-### 5.2 Content Generation
+### Công việc 2.2 – Xây dựng middleware xác thực JWT
+- Viết middleware `auth.js` kiểm tra token trong header `Authorization`
+- Xử lý các trường hợp: token hết hạn, token không hợp lệ, không có token
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Middleware bảo vệ các route cần xác thực
 
-| Method | Endpoint | Mô tả |
-|--------|----------|--------|
-| POST | `/api/content/generate` | Sinh nội dung mới bằng AI |
-| GET | `/api/content` | Lấy danh sách nội dung đã tạo |
-| GET | `/api/content/:id` | Lấy chi tiết một nội dung |
-| PUT | `/api/content/:id` | Cập nhật nội dung |
-| DELETE | `/api/content/:id` | Xóa nội dung |
+### Công việc 2.3 – Xây dựng API quản lý người dùng
+- `GET /api/auth/me` – Lấy thông tin user hiện tại
+- `GET /api/users/profile` – Xem profile
+- `PUT /api/users/profile` – Cập nhật profile (tên, avatar)
+- `GET /api/users/usage` – Xem thống kê sử dụng (số lần sinh nội dung)
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 4 API user hoạt động
 
-### 5.3 Templates
+### Công việc 2.4 – Tạo giao diện đăng ký / đăng nhập
+- Trang `/login` – Form đăng nhập (email + password)
+- Trang `/register` – Form đăng ký (tên + email + password)
+- Lưu token vào cookie/localStorage, redirect sau khi đăng nhập
+- Xử lý hiển thị lỗi validation
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 2 trang auth với UI hoàn chỉnh
 
-| Method | Endpoint | Mô tả |
-|--------|----------|--------|
-| GET | `/api/templates` | Lấy danh sách template |
-| POST | `/api/templates` | Tạo template mới |
-| GET | `/api/templates/:id` | Lấy chi tiết template |
-| PUT | `/api/templates/:id` | Cập nhật template |
-| DELETE | `/api/templates/:id` | Xóa template |
+### Công việc 2.5 – Tạo giao diện profile người dùng
+- Trang `/profile` – Hiển thị thông tin user, form cập nhật
+- Hiển thị thống kê sử dụng (tổng nội dung đã tạo, giới hạn tháng)
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Trang profile
 
-### 5.4 Fine-tuning
-
-| Method | Endpoint | Mô tả |
-|--------|----------|--------|
-| POST | `/api/fine-tune/create` | Tạo job fine-tuning mới |
-| GET | `/api/fine-tune/jobs` | Lấy danh sách jobs |
-| GET | `/api/fine-tune/jobs/:id` | Lấy trạng thái job |
-| POST | `/api/fine-tune/upload-dataset` | Upload dữ liệu huấn luyện |
-| GET | `/api/fine-tune/models` | Lấy danh sách model đã fine-tune |
-
-### 5.5 User
-
-| Method | Endpoint | Mô tả |
-|--------|----------|--------|
-| GET | `/api/users/profile` | Lấy thông tin profile |
-| PUT | `/api/users/profile` | Cập nhật profile |
-| GET | `/api/users/usage` | Xem thống kê sử dụng |
+### Công việc 2.6 – Phân quyền người dùng
+- Định nghĩa 3 role: `free`, `premium`, `admin`
+- Giới hạn số lần sinh nội dung cho user `free` (ví dụ: 10 lần/tháng)
+- Viết middleware kiểm tra quyền truy cập
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Hệ thống phân quyền hoạt động
 
 ---
 
-## 6. Thiết Kế Cơ Sở Dữ Liệu (MongoDB)
+## Giai Đoạn 3: Tích Hợp AI & Sinh Nội Dung (Tuần 5–7)
 
-### 6.1 Collection: Users
+> **Mục tiêu:** Tích hợp GPT-4, xây dựng trang sinh nội dung – chức năng cốt lõi của ứng dụng.
 
-```json
-{
-  "_id": "ObjectId",
-  "email": "string",
-  "password": "string (hashed)",
-  "name": "string",
-  "role": "string (free | premium | admin)",
-  "usage": {
-    "totalGenerated": "number",
-    "monthlyLimit": "number",
-    "currentMonthUsage": "number"
-  },
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
-```
+### Công việc 3.1 – Tích hợp OpenAI API (GPT-4)
+- Cài đặt thư viện `openai`
+- Viết service `gptService.js` gọi API ChatCompletion
+- Xử lý prompt engineering: xây dựng system prompt + user prompt theo loại nội dung
+- Xử lý error (rate limit, token limit, API down)
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** Service gọi GPT-4 hoạt động, test được qua script
 
-### 6.2 Collection: Contents
+### Công việc 3.2 – Xây dựng AI Service Layer
+- Tạo `aiService.js` – lớp trung gian điều phối giữa các model (GPT-4, Llama)
+- Thiết kế interface chung: `generateContent(prompt, options)` → trả về kết quả
+- Hỗ trợ chuyển đổi model linh hoạt
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** AI Service Layer hoàn chỉnh
 
-```json
-{
-  "_id": "ObjectId",
-  "userId": "ObjectId (ref: Users)",
-  "title": "string",
-  "type": "string (blog | ad | email | product | social)",
-  "prompt": "string",
-  "generatedContent": "string",
-  "model": "string (gpt-4 | llama)",
-  "tone": "string",
-  "language": "string",
-  "isFavorite": "boolean",
-  "metadata": {
-    "wordCount": "number",
-    "tokensUsed": "number"
-  },
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
-```
+### Công việc 3.3 – Xây dựng API sinh nội dung
+- `POST /api/content/generate` – Nhận yêu cầu từ user, gọi AI, trả về nội dung
+- Tham số đầu vào: `type`, `prompt`, `tone`, `language`, `model`
+- Lưu kết quả vào database (collection `Contents`)
+- Cập nhật thống kê sử dụng của user
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** API sinh nội dung hoạt động end-to-end
 
-### 6.3 Collection: Templates
+### Công việc 3.4 – Tạo giao diện trang sinh nội dung
+- Trang `/generate` – Giao diện chính của ứng dụng
+- Form nhập: chọn loại nội dung, nhập chủ đề/từ khóa, chọn tone, chọn ngôn ngữ
+- Khu vực hiển thị kết quả với khả năng chỉnh sửa trực tiếp
+- Nút Copy, Lưu, Tạo lại
+- **Thời gian:** 3 ngày
+- **Sản phẩm:** Trang sinh nội dung với UI/UX hoàn chỉnh
 
-```json
-{
-  "_id": "ObjectId",
-  "name": "string",
-  "description": "string",
-  "type": "string",
-  "promptTemplate": "string",
-  "variables": ["string"],
-  "isPublic": "boolean",
-  "createdBy": "ObjectId (ref: Users)",
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
-```
+### Công việc 3.5 – Hỗ trợ nhiều loại nội dung
+- Định nghĩa 6 loại: Blog, Quảng cáo, Email marketing, Mô tả sản phẩm, Bài mạng xã hội, SEO meta
+- Mỗi loại có prompt template riêng phù hợp
+- Giao diện chọn loại nội dung dạng card/grid
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 6 loại nội dung với prompt template tương ứng
 
-### 6.4 Collection: FineTuneJobs
+### Công việc 3.6 – Hỗ trợ chọn tone giọng & ngôn ngữ
+- Danh sách tone: Chuyên nghiệp, Thân thiện, Hài hước, Nghiêm túc, Sáng tạo
+- Danh sách ngôn ngữ: Tiếng Việt, English, và các ngôn ngữ phổ biến khác
+- Tích hợp vào prompt khi gọi AI
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Dropdown chọn tone + ngôn ngữ trên giao diện
 
-```json
-{
-  "_id": "ObjectId",
-  "userId": "ObjectId (ref: Users)",
-  "modelName": "string",
-  "baseModel": "string (gpt-3.5-turbo | llama)",
-  "industry": "string",
-  "status": "string (pending | training | completed | failed)",
-  "datasetPath": "string",
-  "config": {
-    "epochs": "number",
-    "learningRate": "number",
-    "batchSize": "number"
-  },
-  "result": {
-    "modelId": "string",
-    "accuracy": "number",
-    "trainingTime": "number"
-  },
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
-```
+### Công việc 3.7 – Hiệu ứng streaming (real-time)
+- Sử dụng Server-Sent Events (SSE) hoặc streaming response
+- Nội dung AI hiện dần từng từ trên giao diện (giống ChatGPT)
+- Hiển thị trạng thái loading phù hợp
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** Trải nghiệm sinh nội dung real-time
+
+### Công việc 3.8 – Tạo trang Dashboard
+- Trang `/dashboard` – Trang chủ sau khi đăng nhập
+- Hiển thị: thống kê sử dụng, nội dung gần đây, shortcut tạo nội dung mới
+- Biểu đồ thống kê đơn giản (số nội dung theo ngày/tuần)
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** Trang dashboard
 
 ---
 
-## 7. Cấu Trúc Thư Mục Dự Án
+## Giai Đoạn 4: Quản Lý Nội Dung & Template (Tuần 8–9)
 
-```
-NT114.Q21-Web-Copy-Writer/
-├── client/                     # Frontend (Next.js)
-│   ├── public/                 # Static files
-│   ├── src/
-│   │   ├── app/                # Next.js App Router
-│   │   │   ├── (auth)/         # Auth pages (login, register)
-│   │   │   ├── dashboard/      # Dashboard page
-│   │   │   ├── generate/       # Content generation page
-│   │   │   ├── history/        # Content history page
-│   │   │   ├── fine-tune/      # Fine-tuning management page
-│   │   │   ├── templates/      # Templates page
-│   │   │   └── layout.tsx      # Root layout
-│   │   ├── components/         # Reusable components
-│   │   │   ├── ui/             # UI components
-│   │   │   ├── forms/          # Form components
-│   │   │   └── layout/         # Layout components
-│   │   ├── lib/                # Utilities & configs
-│   │   │   ├── api.ts          # API client (Axios)
-│   │   │   └── auth.ts         # Auth utilities
-│   │   └── types/              # TypeScript types
-│   ├── package.json
-│   ├── tailwind.config.ts
-│   └── next.config.js
-│
-├── server/                     # Backend (Express.js)
-│   ├── src/
-│   │   ├── config/             # Configuration files
-│   │   │   ├── db.js           # MongoDB connection
-│   │   │   └── env.js          # Environment variables
-│   │   ├── controllers/        # Route controllers
-│   │   │   ├── authController.js
-│   │   │   ├── contentController.js
-│   │   │   ├── templateController.js
-│   │   │   └── fineTuneController.js
-│   │   ├── middlewares/        # Express middlewares
-│   │   │   ├── auth.js         # JWT authentication
-│   │   │   ├── rateLimit.js    # Rate limiting
-│   │   │   └── validate.js     # Request validation
-│   │   ├── models/             # Mongoose models
-│   │   │   ├── User.js
-│   │   │   ├── Content.js
-│   │   │   ├── Template.js
-│   │   │   └── FineTuneJob.js
-│   │   ├── routes/             # API routes
-│   │   │   ├── authRoutes.js
-│   │   │   ├── contentRoutes.js
-│   │   │   ├── templateRoutes.js
-│   │   │   └── fineTuneRoutes.js
-│   │   ├── services/           # Business logic
-│   │   │   ├── aiService.js    # AI model integration
-│   │   │   ├── gptService.js   # GPT-4 specific logic
-│   │   │   ├── llamaService.js # Llama specific logic
-│   │   │   └── fineTuneService.js
-│   │   └── app.js              # Express app entry point
-│   ├── package.json
-│   └── .env.example
-│
-├── docker-compose.yml          # Docker configuration
-├── .gitignore
-└── README.md
-```
+> **Mục tiêu:** Hoàn thiện CRUD nội dung, tìm kiếm/lọc, hệ thống template để tái sử dụng.
+
+### Công việc 4.1 – Xây dựng CRUD API nội dung
+- `GET /api/content` – Lấy danh sách nội dung (phân trang, lọc theo type/ngày)
+- `GET /api/content/:id` – Xem chi tiết
+- `PUT /api/content/:id` – Cập nhật (chỉnh sửa nội dung đã sinh)
+- `DELETE /api/content/:id` – Xóa nội dung
+- Hỗ trợ đánh dấu yêu thích (`isFavorite`)
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 4 API CRUD nội dung
+
+### Công việc 4.2 – Tạo giao diện lịch sử nội dung
+- Trang `/history` – Danh sách nội dung đã tạo (dạng bảng/card)
+- Chức năng: tìm kiếm theo từ khóa, lọc theo loại/ngày, sắp xếp
+- Phân trang
+- Xem chi tiết, chỉnh sửa, xóa từng nội dung
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** Trang lịch sử nội dung
+
+### Công việc 4.3 – Xuất nội dung
+- Nút Copy to Clipboard
+- Xuất ra file PDF (sử dụng thư viện `jspdf` hoặc `html2pdf`)
+- Xuất ra file Word (.docx)
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** 3 chức năng xuất nội dung
+
+### Công việc 4.4 – Xây dựng CRUD API template
+- `GET /api/templates` – Danh sách template (public + của user)
+- `POST /api/templates` – Tạo template mới
+- `PUT /api/templates/:id` – Cập nhật template
+- `DELETE /api/templates/:id` – Xóa template
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** 4 API CRUD template
+
+### Công việc 4.5 – Tạo thư viện template có sẵn
+- Tạo 10–15 template mẫu cho các ngành nghề phổ biến
+- Ví dụ: "Mô tả sản phẩm thời trang", "Email chào hàng B2B", "Bài blog công nghệ"
+- Seed data vào database
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Bộ template mẫu
+
+### Công việc 4.6 – Tạo giao diện quản lý template
+- Trang `/templates` – Duyệt thư viện template, tạo template tùy chỉnh
+- Chọn template → điền biến → sinh nội dung
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** Trang quản lý template
 
 ---
 
-## 8. Kế Hoạch Thực Hiện
+## Giai Đoạn 5: Tích Hợp Llama & Fine-tuning (Tuần 10–12)
 
-> **Thời gian dự kiến:** 14 tuần (1 người thực hiện)
+> **Mục tiêu:** Tích hợp mô hình Llama mã nguồn mở, xây dựng hệ thống fine-tuning theo ngành nghề.
 
-### Giai Đoạn 1: Khởi Tạo Dự Án & Nền Tảng (Tuần 1–2)
+### Công việc 5.1 – Tích hợp Llama model
+- Cài đặt Ollama hoặc sử dụng Llama API endpoint
+- Viết service `llamaService.js` tương tự `gptService.js`
+- Tích hợp vào AI Service Layer, cho phép user chọn model
+- So sánh kết quả GPT-4 vs Llama
+- **Thời gian:** 3 ngày
+- **Sản phẩm:** Llama model hoạt động song song với GPT-4
 
-- [ ] Khởi tạo repository và cấu trúc thư mục
-- [ ] Cài đặt và cấu hình Next.js (frontend)
-- [ ] Cài đặt và cấu hình Express.js (backend)
-- [ ] Kết nối MongoDB (Mongoose)
-- [ ] Cấu hình Docker cho môi trường phát triển
-- [ ] Thiết kế database schema
+### Công việc 5.2 – Xây dựng API fine-tuning
+- `POST /api/fine-tune/upload-dataset` – Upload file dữ liệu huấn luyện (JSON/CSV)
+- `POST /api/fine-tune/create` – Tạo job fine-tuning mới
+- `GET /api/fine-tune/jobs` – Danh sách jobs
+- `GET /api/fine-tune/jobs/:id` – Trạng thái job (pending / training / completed / failed)
+- `GET /api/fine-tune/models` – Danh sách model đã fine-tune
+- Xử lý file upload bằng `multer`
+- **Thời gian:** 4 ngày
+- **Sản phẩm:** 5 API fine-tuning
 
-### Giai Đoạn 2: Xác Thực & Quản Lý Người Dùng (Tuần 3–4)
+### Công việc 5.3 – Xây dựng fine-tuning service
+- Viết `fineTuneService.js` – gọi OpenAI Fine-tuning API hoặc huấn luyện Llama local
+- Xử lý format dữ liệu (chuyển đổi dataset sang format yêu cầu)
+- Cơ chế queue xử lý fine-tuning job (tránh chạy đồng thời)
+- **Thời gian:** 4 ngày
+- **Sản phẩm:** Service fine-tuning hoạt động
 
-- [ ] Xây dựng API đăng ký / đăng nhập (JWT)
-- [ ] Xây dựng middleware xác thực
-- [ ] Tạo giao diện đăng ký / đăng nhập
-- [ ] Quản lý hồ sơ người dùng
-- [ ] Phân quyền (Free / Premium)
+### Công việc 5.4 – Tạo giao diện quản lý fine-tuning
+- Trang `/fine-tune` – Quản lý toàn bộ fine-tuning
+- Form upload dataset (kéo thả file)
+- Form tạo job mới (chọn base model, ngành nghề, tham số)
+- Bảng theo dõi trạng thái các jobs (real-time cập nhật)
+- Danh sách model đã fine-tune, nút sử dụng để sinh nội dung
+- **Thời gian:** 3 ngày
+- **Sản phẩm:** Trang fine-tuning
 
-### Giai Đoạn 3: Tích Hợp AI & Sinh Nội Dung (Tuần 5–7)
-
-- [ ] Tích hợp OpenAI API (GPT-4)
-- [ ] Xây dựng AI Service Layer
-- [ ] Xây dựng API sinh nội dung (`/api/content/generate`)
-- [ ] Tạo giao diện trang sinh nội dung
-- [ ] Hỗ trợ nhiều loại nội dung (blog, quảng cáo, email, ...)
-- [ ] Chọn tone giọng và ngôn ngữ
-
-### Giai Đoạn 4: Quản Lý Nội Dung & Template (Tuần 8–9)
-
-- [ ] Xây dựng CRUD API cho nội dung
-- [ ] Tạo giao diện lịch sử nội dung
-- [ ] Chức năng tìm kiếm và lọc
-- [ ] Xuất nội dung (Copy / PDF)
-- [ ] Xây dựng hệ thống template
-- [ ] Tạo thư viện template có sẵn
-
-### Giai Đoạn 5: Tích Hợp Llama & Fine-tuning (Tuần 10–12)
-
-- [ ] Tích hợp Llama model
-- [ ] Xây dựng API fine-tuning
-- [ ] Tạo giao diện quản lý fine-tuning
-- [ ] Upload và xử lý dataset
-- [ ] Theo dõi tiến trình fine-tuning
-- [ ] Sử dụng model đã fine-tune
-
-### Giai Đoạn 6: Tối Ưu & Hoàn Thiện (Tuần 13–14)
-
-- [ ] Tối ưu hiệu suất (caching, rate limiting)
-- [ ] Responsive design cho mobile
-- [ ] Kiểm thử toàn bộ hệ thống
-- [ ] Viết tài liệu hướng dẫn sử dụng
-- [ ] Deploy lên môi trường production
-- [ ] Bug fixing và cải thiện UX
+### Công việc 5.5 – Sử dụng model đã fine-tune
+- Cho phép user chọn model đã fine-tune khi sinh nội dung
+- Hiển thị danh sách model fine-tuned trong dropdown trên trang `/generate`
+- Gắn nhãn ngành nghề cho mỗi model
+- **Thời gian:** 1 ngày
+- **Sản phẩm:** Tích hợp model fine-tuned vào luồng sinh nội dung
 
 ---
 
-## 9. Hướng Dẫn Cài Đặt & Chạy Dự Án
+## Giai Đoạn 6: Kiểm Thử, Tối Ưu & Triển Khai (Tuần 13–14)
 
-### Yêu Cầu Hệ Thống
+> **Mục tiêu:** Đảm bảo chất lượng, tối ưu hiệu suất, và triển khai ứng dụng.
 
-- **Node.js** >= 18.x
-- **npm** >= 9.x hoặc **yarn** >= 1.22.x
-- **MongoDB** >= 6.x
-- **Docker** (khuyến nghị)
+### Công việc 6.1 – Kiểm thử & sửa lỗi
+- Kiểm thử từng API bằng Postman (functional testing)
+- Kiểm thử giao diện trên nhiều trình duyệt (Chrome, Firefox, Safari)
+- Kiểm thử responsive trên mobile/tablet
+- Kiểm thử luồng end-to-end: đăng ký → đăng nhập → sinh nội dung → lưu → xuất
+- Sửa tất cả bug phát hiện được
+- **Thời gian:** 4 ngày
+- **Sản phẩm:** Ứng dụng hoạt động ổn định, không lỗi nghiêm trọng
 
-### Cài Đặt
+### Công việc 6.2 – Tối ưu hiệu suất & bảo mật
+- Thêm rate limiting (`express-rate-limit`) cho các API nhạy cảm
+- Caching response AI bằng Redis hoặc in-memory cache
+- Tối ưu query MongoDB (thêm index cho các trường thường tìm kiếm)
+- Validate và sanitize toàn bộ input (chống XSS, injection)
+- Helmet.js cho HTTP security headers
+- **Thời gian:** 2 ngày
+- **Sản phẩm:** Hệ thống bảo mật và nhanh hơn
 
-```bash
-# Clone repository
-git clone https://github.com/23521228-BuiLeHuyPhuoc/NT114.Q21-Web-Copy-Writer.git
-cd NT114.Q21-Web-Copy-Writer
-
-# Cài đặt dependencies cho backend
-cd server
-npm install
-
-# Cài đặt dependencies cho frontend
-cd ../client
-npm install
-```
-
-### Cấu Hình Biến Môi Trường
-
-Tạo file `.env` trong thư mục `server/`:
-
-```env
-# Server
-PORT=5000
-NODE_ENV=development
-
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/ai-copywriter
-
-# JWT
-JWT_SECRET=your-jwt-secret-key  # Thay bằng chuỗi ngẫu nhiên mạnh, ví dụ: openssl rand -hex 64
-JWT_EXPIRES_IN=7d
-
-# OpenAI
-OPENAI_API_KEY=your-openai-api-key
-
-# Llama
-LLAMA_API_URL=http://localhost:11434
-```
-
-### Chạy Dự Án
-
-```bash
-# Chạy backend (development)
-cd server
-npm run dev
-
-# Chạy frontend (development)
-cd client
-npm run dev
-```
-
-### Chạy Với Docker
-
-```bash
-docker-compose up -d
-```
+### Công việc 6.3 – Triển khai & viết tài liệu
+- Deploy backend lên VPS hoặc dịch vụ cloud (Railway, Render, AWS)
+- Deploy frontend lên Vercel
+- Deploy MongoDB lên MongoDB Atlas
+- Cấu hình domain, HTTPS
+- Viết tài liệu hướng dẫn sử dụng cho người dùng
+- Cập nhật README với hướng dẫn cài đặt chi tiết
+- **Thời gian:** 3 ngày
+- **Sản phẩm:** Ứng dụng live trên internet, tài liệu hoàn chỉnh
 
 ---
 
-## 10. Tài Liệu Tham Khảo
+## Tổng Kết Thời Gian
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Express.js Documentation](https://expressjs.com/)
-- [MongoDB Documentation](https://www.mongodb.com/docs/)
-- [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
-- [Meta Llama](https://llama.meta.com/)
-- [LangChain Documentation](https://js.langchain.com/docs/)
-- [Mongoose Documentation](https://mongoosejs.com/docs/)
+| Giai đoạn | Công việc | Thời gian |
+|-----------|-----------|-----------|
+| GĐ 1 – Khởi tạo & môi trường | 7 công việc | 9 ngày (Tuần 1–2) |
+| GĐ 2 – Xác thực & người dùng | 6 công việc | 9 ngày (Tuần 3–4) |
+| GĐ 3 – AI & sinh nội dung | 8 công việc | 15 ngày (Tuần 5–7) |
+| GĐ 4 – Nội dung & template | 6 công việc | 10 ngày (Tuần 8–9) |
+| GĐ 5 – Llama & fine-tuning | 5 công việc | 15 ngày (Tuần 10–12) |
+| GĐ 6 – Kiểm thử & triển khai | 3 công việc | 9 ngày (Tuần 13–14) |
+| **Tổng** | **35 công việc** | **~67 ngày (~14 tuần)** |
 
 ---
 
-## 11. License
+## Ghi Chú
 
-MIT License – Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
+- Dự án do **1 người thực hiện**, nên mỗi giai đoạn cần hoàn thành tuần tự.
+- Ưu tiên hoàn thành **Giai đoạn 1–3** trước để có sản phẩm chạy được sớm nhất (MVP).
+- Có thể điều chỉnh thời gian linh hoạt tùy tiến độ thực tế.
+- Nên commit code thường xuyên và viết commit message rõ ràng.
