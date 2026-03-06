@@ -120,25 +120,6 @@ client/
 └── yarn.lock                   # Lock file (yarn)
 ```
 
-**Vai trò từng thư mục chính của Client:**
-
-| Thư mục | Công việc |
-|---------|-----------|
-| `app/(auth)/` | Chứa trang đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu |
-| `app/(public)/` | Chứa landing page, trang liên hệ, bảng giá |
-| `app/(user)/` | Chứa dashboard, trang sinh nội dung AI, quản lý nội dung, dự án, template, fine-tune, profile, billing, thông báo |
-| `app/(admin)/` | Chứa dashboard admin, quản lý user, nội dung, template, danh mục, gói dịch vụ, thanh toán, model AI, cài đặt hệ thống, audit log |
-| `components/ui/` | Chứa các component UI tái sử dụng: Button, Input, Textarea, Select, Modal, Table, Pagination, Card, Badge, Spinner, ... |
-| `components/layout/` | Chứa Header (navbar, user menu), Sidebar (menu điều hướng user), AdminSidebar (menu admin), Footer |
-| `components/forms/` | Chứa các form phức tạp: form đăng nhập, form sinh nội dung, form tạo template, form upload dataset, ... |
-| `components/charts/` | Chứa biểu đồ: UsageChart, RevenueChart, GrowthChart cho dashboard |
-| `hooks/` | Chứa custom hooks: useAuth (xác thực), useContent (thao tác nội dung), useDebounce (delay tìm kiếm), usePagination, ... |
-| `lib/` | Chứa cấu hình Axios (base URL, token interceptor, error handling), hàm tiện ích dùng chung |
-| `services/` | Chứa các lớp gọi API: authService (login, register), contentService (generate, CRUD), adminService (quản lý user, ...) |
-| `stores/` | Chứa Zustand store quản lý state: authStore (user đăng nhập), uiStore (sidebar, theme) |
-| `types/` | Chứa TypeScript interfaces/types cho User, Content, Template, Project, Plan, ... |
-| `constants/` | Chứa hằng số: danh sách content types, tones, languages, route paths |
-
 ### 2.3 Server (Express.js) – Cấu Trúc Thư Mục
 
 ```
@@ -159,22 +140,6 @@ server/
 ├── yarn.lock                   # Lock file (yarn)
 └── Dockerfile                  # Docker build cho server
 ```
-
-**Vai trò từng thư mục chính của Server:**
-
-| Thư mục | Công việc |
-|---------|-----------|
-| `config/` | Cấu hình kết nối MongoDB (Mongoose), cấu hình Cloudinary, cấu hình Passport (Google OAuth), đọc biến môi trường |
-| `models/` | Định nghĩa Mongoose schema cho từng collection: User, Content, Template, Project, Plan, Subscription, Payment, FineTuneJob, Notification, Category, UsageLog, AuditLog, SystemSetting |
-| `routes/` | Khai báo endpoint API: auth routes (`/api/auth/*`), content routes (`/api/content/*`), admin routes (`/api/admin/*`), template routes, project routes, fine-tune routes, ... |
-| `controllers/` | Xử lý request/response cho từng route: nhận dữ liệu → gọi service → trả kết quả. Ví dụ: `contentController.generate()` nhận prompt → gọi aiService → trả nội dung |
-| `services/` | Chứa business logic tách biệt khỏi controller. Gồm: `gptService` (gọi OpenAI API), `llamaService` (gọi Ollama), `aiService` (điều phối chọn model), `fineTuneService` (quản lý fine-tuning), `emailService` (gửi email), `cloudinaryService` (upload/xóa ảnh) |
-| `middlewares/` | Chứa middleware: `auth.js` (xác thực JWT), `role.js` (kiểm tra role admin/premium), `validate.js` (validate request bằng Joi schema), `upload.js` (cấu hình Multer cho file upload), `rateLimiter.js` (giới hạn request), `errorHandler.js` (xử lý lỗi tập trung) |
-| `validations/` | Chứa Joi schema validate dữ liệu: `authValidation` (email regex, password strength), `contentValidation` (prompt required, type enum), `templateValidation`, `projectValidation`, ... Sử dụng **Regex** để validate format email, phone, URL, ... |
-| `utils/` | Chứa hàm tiện ích: `regexPatterns.js` (tập hợp regex dùng chung cho tìm kiếm và validate), `tokenHelper.js` (tạo/verify JWT), `emailSender.js` (gửi email qua Nodemailer), `pagination.js` (helper phân trang) |
-| `uploads/` | Thư mục tạm chứa file upload (avatar, dataset CSV/JSON) trước khi Multer + Cloudinary xử lý đẩy lên cloud |
-
----
 
 ## 3. Chi Tiết Công Việc Phía Client (Frontend)
 
@@ -553,14 +518,3 @@ server/
 
 ---
 
-## 7. Ghi Chú
-
-- **Package manager:** Sử dụng **yarn** cho cả client và server (thay npm).
-- **Mã hoá mật khẩu:** Sử dụng **bcrypt** (salt round 10) để hash password trước khi lưu vào MongoDB.
-- **Validate dữ liệu:** Sử dụng **Joi** (joi.dev) cho tất cả API endpoint; kết hợp **Regex** cho validate format (email, phone, URL, slug, password pattern) và tìm kiếm nội dung.
-- **Lưu trữ hình ảnh:** **Multer** nhận file upload → **Cloudinary** lưu trữ trên cloud → trả về `secure_url` lưu vào database.
-- **AI approach:** Xây dựng RESTful API cho AI model. GPT-4 qua OpenAI SDK, Llama qua Ollama local. Sử dụng LangChain.js để orchestrate prompt chaining. Hỗ trợ fine-tuning qua OpenAI API hoặc Llama local training.
-- **Streaming:** Sử dụng Server-Sent Events (SSE) để stream nội dung từ AI về client theo thời gian thực.
-- Dự án do 1 người thực hiện.
-- Ưu tiên hoàn thành **xác thực → sinh nội dung → quản lý nội dung** trước (MVP).
-- Trang admin và thanh toán phát triển sau khi các chức năng cốt lõi ổn định.
