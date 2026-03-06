@@ -69,7 +69,7 @@
 | `/api/content/:id` | DELETE | Xóa nội dung |
 | `/api/content/:id/favorite` | PATCH | Toggle yêu thích |
 | `/api/content/:id/tags` | PATCH | Cập nhật mảng tags |
-| `/api/content/:id/export` | GET | Xuất file PDF/Word (`?format=pdf\|docx`) |
+| `/api/content/:id/export` | GET | Xuất file PDF/Word (`?format=pdf` hoặc `docx`) |
 
 **Services chính:**
 - `aiService.js` – Điều phối chọn model AI, xây dựng prompt, gọi API
