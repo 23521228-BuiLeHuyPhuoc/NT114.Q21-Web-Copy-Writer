@@ -154,8 +154,7 @@ class NotificationService {
         
         // Only set offline if no more connections for this user
         if (!this.isUserOnline(userId)) {
-          this.updatePresence(userId, socket.id, 'online');
-          this.broadcastPresenceUpdate(userId, 'online');
+          this.broadcastPresenceUpdate(userId, 'offline');
           this.presence.delete(userId);
         }
       });

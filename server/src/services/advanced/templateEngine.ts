@@ -59,7 +59,16 @@ const FILTERS: Record<string, (value: string) => string> = {
   sentencecase: (v: string) => {
     return v.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
   },
-  striphtml: (v: string) => v.replace(/<[^>]*>/g, ''),
+  striphtml: (v: string) => {
+    // Apply replacement in a loop to handle nested/malformed tags like <scr<script>ipt>
+    let result = v;
+    let prev = '';
+    while (result !== prev) {
+      prev = result;
+      result = result.replace(/<[^>]*>/g, '');
+    }
+    return result;
+  },
 };
 
 /**
