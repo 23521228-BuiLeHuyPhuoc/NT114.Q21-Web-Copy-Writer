@@ -5,7 +5,10 @@
 - **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
 - **Môn học:** NT114.Q21
 - **Thực hiện:** Bùi Lê Huy Phước
-- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Hệ thống còn tích hợp nhiều tính năng nâng cao: **Multi-Agent AI Pipeline** (nhiều AI agent phối hợp: Researcher → Writer → Editor → SEO Optimizer), **Brand Voice Cloning** (nhân bản giọng điệu thương hiệu), **AI A/B Testing** (tối ưu nội dung tự động), **AI Image Generation** (sinh hình minh họa), **Social Media Auto-Publishing** (tự động đăng bài lên mạng xã hội), RAG, Real-time Collaboration, NLP Analytics, Plagiarism Detection, Elasticsearch, Redis Caching, BullMQ, CI/CD Pipeline *(xem chi tiết tại [Mục 7 – Tính Năng Nâng Cao](#7-tính-năng-nâng-cao-advanced-features-))*.
+- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Ngoài ra, hệ thống tích hợp **13 tính năng nâng cao** bao gồm:
+  - Multi-Agent AI Pipeline, Brand Voice Cloning, AI A/B Testing, AI Image Generation, Social Media Auto-Publishing, Content Workflow Engine
+  - RAG, Real-time Collaboration, NLP Analytics, Plagiarism Detection, Elasticsearch, Redis Caching, BullMQ + CI/CD
+  - *(Xem chi tiết tại [Mục 7 – Tính Năng Nâng Cao](#7-tính-năng-nâng-cao-advanced-features-))*
 
 ---
 
