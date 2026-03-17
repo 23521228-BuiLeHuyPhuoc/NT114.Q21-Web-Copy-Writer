@@ -5,7 +5,7 @@
 - **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
 - **Môn học:** NT114.Q21
 - **Thực hiện:** Bùi Lê Huy Phước
-- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Hệ thống còn tích hợp nhiều tính năng nâng cao: RAG, Real-time Collaboration, NLP Analytics, Plagiarism Detection, Elasticsearch, Redis Caching, BullMQ, CI/CD Pipeline *(xem chi tiết tại [Mục 7 – Tính Năng Nâng Cao](#7-tính-năng-nâng-cao-advanced-features-))*.
+- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Hệ thống còn tích hợp nhiều tính năng nâng cao: **Multi-Agent AI Pipeline** (nhiều AI agent phối hợp: Researcher → Writer → Editor → SEO Optimizer), **Brand Voice Cloning** (nhân bản giọng điệu thương hiệu), **AI A/B Testing** (tối ưu nội dung tự động), **AI Image Generation** (sinh hình minh họa), **Social Media Auto-Publishing** (tự động đăng bài lên mạng xã hội), RAG, Real-time Collaboration, NLP Analytics, Plagiarism Detection, Elasticsearch, Redis Caching, BullMQ, CI/CD Pipeline *(xem chi tiết tại [Mục 7 – Tính Năng Nâng Cao](#7-tính-năng-nâng-cao-advanced-features-))*.
 
 ---
 
@@ -30,6 +30,10 @@
 | **Socket.io-client** | WebSocket client cho collaboration và real-time notifications |
 | **Monaco Editor / TipTap** | Rich text editor hỗ trợ collaborative editing |
 | **D3.js / word-cloud** | Vẽ word cloud cho keyword analysis |
+| **react-beautiful-dnd** | Drag-and-drop cho workflow pipeline (content approval stages) |
+| **FullCalendar / react-big-calendar** | Lịch đăng bài (content calendar) cho social media publishing |
+| **react-diff-viewer** | Hiển thị diff so sánh giữa các phiên bản A/B testing |
+| **Wavesurfer.js** | Audio waveform visualization cho voice-to-text content |
 
 ### 1.2 Backend (Server)
 
@@ -64,6 +68,14 @@
 | **openai (Embeddings API)** | Tạo vector embeddings từ text cho semantic search trong RAG |
 | **plagiarism-checker / copyscape API** | Kiểm tra đạo văn nội dung AI sinh ra |
 | **y-websocket + Yjs** | CRDT-based real-time collaborative editing engine |
+| **LangGraph / custom agent orchestrator** | Multi-Agent AI pipeline: orchestrate nhiều AI agent chuyên biệt (Researcher, Writer, Editor, SEO Optimizer) theo DAG workflow |
+| **OpenAI DALL-E 3 SDK / Stability AI** | Sinh hình ảnh minh họa từ text prompt (thumbnails, banners, social images) |
+| **OpenAI Whisper API** | Speech-to-text: chuyển giọng nói thành văn bản cho content creation |
+| **node-cron / Agenda.js** | Job scheduling engine cho social media auto-publishing (cron-based + calendar) |
+| **passport-facebook / passport-twitter / passport-linkedin** | OAuth 2.0 kết nối tài khoản mạng xã hội cho auto-publishing |
+| **facebook-nodejs-business-sdk / twitter-api-v2 / linkedin-api** | API clients đăng bài lên Facebook, Twitter/X, LinkedIn |
+| **xstate** | State machine library cho content workflow engine (Draft → Review → Approved → Published) |
+| **jstat / simple-statistics** | Thư viện thống kê cho A/B testing (t-test, chi-squared, statistical significance) |
 
 ### 1.3 Database & DevOps
 
@@ -92,6 +104,10 @@
 | **AI Plagiarism Detection** | So sánh nội dung sinh ra với cơ sở dữ liệu nội dung đã tạo + web scraping → tính tỉ lệ trùng lặp (cosine similarity trên embeddings) → cảnh báo nếu vượt ngưỡng |
 | **Prompt Engineering** | Mỗi loại nội dung (blog, quảng cáo, email, …) có system prompt riêng, kết hợp tone giọng + ngôn ngữ + template variables |
 | **Streaming (SSE)** | Sử dụng Server-Sent Events để stream nội dung từ AI về client theo thời gian thực |
+| **Multi-Agent AI Pipeline** | Thiết kế pipeline gồm nhiều AI agent chuyên biệt: (1) **Research Agent** – tìm kiếm thông tin, fact-check; (2) **Writer Agent** – viết nội dung draft; (3) **Editor Agent** – chỉnh sửa ngữ pháp, cải thiện flow; (4) **SEO Optimizer Agent** – tối ưu keyword, heading, meta. Các agent giao tiếp qua message passing, có feedback loop để cải thiện iteratively |
+| **Brand Voice Cloning** | Phân tích tập mẫu nội dung thương hiệu → trích xuất style features (vocabulary richness, sentence patterns, tone markers, formality level) → tạo brand voice embedding → lưu thành voice profile → inject vào system prompt khi sinh nội dung → AI viết theo đúng giọng điệu thương hiệu |
+| **AI A/B Testing** | Sinh nhiều biến thể nội dung (khác headline, CTA, tone, structure) → theo dõi engagement metrics (click-through, read time, conversion) → statistical significance testing (t-test, chi-squared) → tự động chọn version tốt nhất |
+| **AI Image Generation** | Từ nội dung text đã sinh → tạo image prompt phù hợp → gọi DALL-E 3 / Stable Diffusion → sinh thumbnail, banner, social media image → auto-resize theo platform requirements |
 
 ---
 
@@ -154,6 +170,9 @@ server/
 │   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, cache, errorHandler)
 │   ├── validations/            # Joi validation schemas (authValidation, contentValidation, ragValidation, ...)
 │   ├── jobs/                   # BullMQ job processors (fineTuneJob, embeddingJob, analyticsJob, bulkGenerateJob)
+│   ├── agents/                 # Multi-Agent AI pipeline (researchAgent, writerAgent, editorAgent, seoAgent, orchestrator)
+│   ├── workflows/              # Content workflow engine (stateMachine, transitions, approvalLogic)
+│   ├── scheduler/              # Social media publishing scheduler (cronJobs, calendarSync, platformAdapters)
 │   ├── socket/                 # Socket.io handlers (collaboration, notifications, presence)
 │   ├── utils/                  # Hàm tiện ích (regex patterns, email sender, token generator, ...)
 │   └── app.js                  # Entry point – khởi tạo Express, Redis, Elasticsearch, Socket.io, mount routes
@@ -193,6 +212,12 @@ server/
 | `/collaborate/:id` Real-time Collaboration | **[TÍNH NĂNG NÂNG CAO]** Chỉnh sửa nội dung cùng lúc với nhiều người dùng qua WebSocket (Socket.io + Yjs CRDT). Hiển thị cursor và highlight của từng collaborator (mỗi người một màu). Danh sách user online. Lịch sử thay đổi real-time. Conflict resolution tự động bằng CRDT. Chat sidebar trong phiên collaboration |
 | `/analytics` Content Analytics | **[TÍNH NĂNG NÂNG CAO]** Dashboard phân tích NLP cho nội dung: Readability Score (Flesch-Kincaid, Coleman-Liau index), Sentiment Analysis (biểu đồ positive/negative/neutral), Keyword Density (word cloud + bảng tần suất), SEO Score (meta analysis, heading structure, keyword optimization). So sánh chất lượng giữa các model AI. Đề xuất cải thiện nội dung bằng AI |
 | `/plagiarism-check` Plagiarism Detection | **[TÍNH NĂNG NÂNG CAO]** Kiểm tra đạo văn nội dung: paste hoặc chọn nội dung đã tạo → hệ thống tính cosine similarity với database nội dung + web sources → hiển thị tỉ lệ trùng lặp (%), highlight đoạn trùng, nguồn gốc. Lịch sử kiểm tra. Tích hợp nút kiểm tra ngay sau khi sinh nội dung |
+| `/agent-generate` Multi-Agent AI Generate | **[TÍNH NĂNG NÂNG CAO – KHÓ]** Trang sinh nội dung cao cấp sử dụng Multi-Agent Pipeline. Chọn loại nội dung → nhập brief/yêu cầu → hệ thống khởi chạy pipeline gồm 4 AI agents: (1) **Research Agent** tìm kiếm thông tin, fact-check → hiển thị research notes; (2) **Writer Agent** viết draft dựa trên research → hiển thị draft; (3) **Editor Agent** chỉnh sửa ngữ pháp, cải thiện flow → hiển thị bản chỉnh; (4) **SEO Optimizer Agent** tối ưu keyword, heading → hiển thị bản cuối. Mỗi bước hiển thị real-time (streaming). User có thể can thiệp, chỉnh sửa giữa các bước. Timeline visualization hiển thị tiến trình pipeline |
+| `/brand-voice` Brand Voice Studio | **[TÍNH NĂNG NÂNG CAO – KHÓ]** Upload tập mẫu nội dung thương hiệu (5-20 bài viết) → hệ thống phân tích style: vocabulary richness, sentence length distribution, tone markers (formal/casual/professional), formality level, keyword preferences → tạo **Brand Voice Profile** (embedding + metadata). Quản lý nhiều voice profiles (mỗi thương hiệu 1 profile). Khi sinh nội dung, chọn voice profile → AI viết theo đúng giọng điệu. So sánh consistency score giữa nội dung mới và voice profile. Biểu đồ radar hiển thị voice characteristics |
+| `/ab-testing` A/B Content Testing | **[TÍNH NĂNG NÂNG CAO – KHÓ]** Tạo A/B test mới: chọn nội dung gốc → sinh 2-5 biến thể (thay đổi headline, CTA, tone, structure) bằng AI. Dashboard theo dõi: click-through rate, read time, bounce rate, conversion rate cho mỗi biến thể (mock data hoặc tích hợp tracking pixel). Biểu đồ so sánh performance real-time. Statistical significance indicator (t-test, p-value). Tự động chọn winning variant khi đạt statistical significance (p < 0.05). Lịch sử A/B tests |
+| `/social-publish` Social Media Publishing | **[TÍNH NĂNG NÂNG CAO – KHÓ]** Kết nối tài khoản mạng xã hội (Facebook, Twitter/X, LinkedIn) qua OAuth. Content Calendar: lịch đăng bài dạng calendar view (ngày/tuần/tháng). Tạo bài đăng: chọn nội dung đã tạo → AI tự động adapt cho từng platform (character limit, hashtags, image specs) → preview cho mỗi nền tảng → lên lịch đăng (date/time picker). Hàng đợi bài đăng (queue). Trạng thái: scheduled/published/failed. Performance tracking: likes, shares, comments, reach cho mỗi bài |
+| `/image-studio` AI Image Studio | **[TÍNH NĂNG NÂNG CAO – KHÓ]** Sinh hình ảnh minh họa cho nội dung bằng AI (DALL-E 3 / Stable Diffusion). Chọn nội dung đã tạo → AI tự động tạo image prompt từ content → sinh 4 biến thể hình ảnh → user chọn/chỉnh sửa → auto-resize cho các platform (blog thumbnail 1200×630, Instagram square 1080×1080, Facebook cover 820×312). Gallery quản lý hình ảnh đã tạo. Tích hợp nút sinh ảnh ngay trong trang `/generate` |
+| `/content-workflow` Content Workflow | **[TÍNH NĂNG NÂNG CAO – KHÓ]** Quản lý quy trình duyệt nội dung nhiều bước: tạo workflow template (Draft → Review → Editor Approval → SEO Check → Final Approval → Published). Drag-and-drop Kanban board hiển thị nội dung ở mỗi stage. Gán reviewer/approver cho mỗi stage. Comment/feedback tại mỗi bước. Notification khi nội dung chuyển stage. Deadline tracking. Dashboard thống kê: thời gian trung bình mỗi stage, bottleneck detection |
 | `/profile` Hồ sơ cá nhân | Xem/cập nhật thông tin: tên, email, avatar (upload ảnh → Multer + Cloudinary). Đổi mật khẩu (nhập mật khẩu cũ + mới). Thống kê sử dụng: token đã dùng, số nội dung, gói hiện tại. Quản lý API key cá nhân. Cài đặt thông báo |
 | `/billing` Thanh toán | Hiển thị gói hiện tại + giới hạn. So sánh 3 gói (Free/Pro/Enterprise). Nút nâng cấp → Stripe checkout. Lịch sử thanh toán. Quản lý subscription (gia hạn/hủy) |
 | `/notifications` Thông báo | Danh sách thông báo (phân trang). Đánh dấu đã đọc / đọc tất cả. Lọc theo loại (system/billing/fine-tune/account) |
@@ -314,7 +339,75 @@ server/
 | Index sync | Khi content được tạo/sửa/xóa trong MongoDB → **BullMQ** job đồng bộ index Elasticsearch. Bulk reindex API cho admin |
 | Search analytics | Ghi log search queries → phân tích top searches, zero-result queries → cải thiện search relevance |
 
-### 4.11 API Người Dùng (`/api/users`)
+### 4.11 API Multi-Agent AI Pipeline (`/api/agent-pipeline`) ⭐⭐ NÂNG CAO – KHÓ
+
+| Công việc | Mô tả |
+|-----------|-------|
+| Khởi chạy pipeline | `POST /run` nhận `{ type, brief, tone, language, voiceProfileId?, knowledgeBaseIds? }` → validate Joi → tạo PipelineRun (status: running) → khởi chạy agent orchestrator → trả pipelineRunId để client theo dõi real-time |
+| Research Agent | Agent 1: nhận brief → tạo search queries → gọi web search API (hoặc RAG semantic search nếu có knowledge base) → thu thập facts, statistics, references → tổng hợp research notes → streaming results qua Socket.io → lưu vào PipelineRun.steps[0] |
+| Writer Agent | Agent 2: nhận research notes + brief + tone + voice profile (nếu có) → xây dựng system prompt chuyên biệt cho content type → gọi GPT-4/Llama sinh draft → streaming → lưu vào PipelineRun.steps[1] |
+| Editor Agent | Agent 3: nhận draft → phân tích grammar, readability, flow, consistency → chỉnh sửa tự động + ghi chú suggestions → streaming → lưu vào PipelineRun.steps[2] |
+| SEO Optimizer Agent | Agent 4: nhận edited content + target keywords → phân tích keyword density, heading structure, meta description → tối ưu SEO → streaming bản cuối → lưu vào PipelineRun.steps[3]. Tạo Content record từ kết quả cuối |
+| Feedback loop | User review kết quả mỗi step → `POST /run/:id/feedback` gửi feedback cho agent cụ thể → agent chạy lại với feedback → cập nhật kết quả |
+| Pipeline monitoring | `GET /run/:id` trả trạng thái pipeline + kết quả từng step. Socket.io events `pipeline-step-start`, `pipeline-step-complete`, `pipeline-complete` cho real-time tracking |
+| Agent orchestrator | **LangGraph** pattern: DAG (Directed Acyclic Graph) workflow – mỗi agent là 1 node, edges định nghĩa data flow. Conditional routing: nếu research agent không tìm đủ info → retry hoặc fallback. Timeout handling cho mỗi step. Error recovery |
+
+### 4.12 API Brand Voice (`/api/brand-voice`) ⭐⭐ NÂNG CAO – KHÓ
+
+| Công việc | Mô tả |
+|-----------|-------|
+| Tạo voice profile | `POST /profiles` nhận tên thương hiệu + upload 5-20 bài viết mẫu (text/file) → **NLP analysis pipeline**: (1) Tokenization + POS tagging → (2) Vocabulary richness (TTR, Hapax Legomena) → (3) Sentence length distribution (mean, std, histogram) → (4) Tone markers detection (formal/casual/professional/humorous) → (5) Formality score → (6) Keyword preferences (TF-IDF) → (7) Tạo style embedding (average embedding of all samples) → lưu VoiceProfile vào MongoDB + style embedding vào Pinecone → trả profile |
+| Quản lý profiles | `GET /profiles` danh sách, `GET /profiles/:id` chi tiết (hiển thị radar chart data: vocabulary, formality, complexity, tone), `PUT /profiles/:id` cập nhật (thêm/bớt sample content, re-analyze), `DELETE /profiles/:id` xóa |
+| Voice consistency check | `POST /profiles/:id/check` nhận content text → so sánh style features với profile → trả consistency score (0-100%) + chi tiết từng dimension (vocabulary match, tone match, formality match) + đề xuất cải thiện |
+| Generate with voice | Tích hợp vào content generation flow: khi user chọn voice profile → inject voice characteristics vào system prompt (ví dụ: "Write in a professional tone, average sentence length 15-20 words, use technical vocabulary, formality level: high") → AI sinh nội dung matching brand voice |
+
+### 4.13 API A/B Testing (`/api/ab-testing`) ⭐⭐ NÂNG CAO – KHÓ
+
+| Công việc | Mô tả |
+|-----------|-------|
+| Tạo A/B test | `POST /tests` nhận contentId (nội dung gốc) + số biến thể (2-5) + dimensions thay đổi (headline/CTA/tone/structure) → AI sinh các biến thể tự động → lưu ABTest record (status: running) + TestVariant records → trả testId |
+| Variant generation | Gọi GPT-4 với prompt chuyên biệt: "Rewrite this [headline/CTA/body] with [different tone/more urgency/different structure]" → mỗi dimension thay đổi → tạo variant. Lưu mỗi variant kèm metadata (dimension changed, original vs new) |
+| Tracking pixel | `GET /track/:testId/:variantId` trả tracking pixel (1x1 transparent GIF) + ghi log impression. `POST /track/:testId/:variantId/click` ghi click event. `POST /track/:testId/:variantId/conversion` ghi conversion |
+| Performance dashboard | `GET /tests/:id/stats` trả số liệu mỗi variant: impressions, clicks, CTR, conversions, conversion rate, average read time. Tính toán real-time từ TrackingEvents collection |
+| Statistical analysis | `GET /tests/:id/analysis` chạy **t-test** (so sánh 2 variants) hoặc **chi-squared test** (so sánh nhiều variants) → trả p-value, confidence interval, statistical significance (p < 0.05). Bayesian analysis cho early stopping |
+| Auto-select winner | Background job (**BullMQ**): mỗi giờ kiểm tra running tests → nếu đạt minimum sample size + statistical significance → đánh dấu winning variant → thông báo user → tự động cập nhật nội dung gốc (nếu user bật auto-apply) |
+
+### 4.14 API Social Media Publishing (`/api/social`) ⭐⭐ NÂNG CAO – KHÓ
+
+| Công việc | Mô tả |
+|-----------|-------|
+| Kết nối tài khoản | `GET /connect/:platform` (facebook/twitter/linkedin) → redirect OAuth 2.0 flow → callback → lưu access token + refresh token (mã hóa AES-256) vào SocialAccount collection |
+| Danh sách tài khoản | `GET /accounts` trả danh sách tài khoản đã kết nối (platform, username, avatar, connected status). `DELETE /accounts/:id` ngắt kết nối |
+| Adapt nội dung | `POST /adapt` nhận contentId + platforms → AI tự động điều chỉnh nội dung cho từng platform: Twitter (280 ký tự + hashtags), Facebook (dài hơn + emoji), LinkedIn (professional tone + hashtags). Trả preview cho mỗi platform |
+| Lên lịch đăng | `POST /schedule` nhận adaptedContent + platform + scheduledAt (datetime) → validate (không quá khứ, không quá 90 ngày) → lưu ScheduledPost (status: scheduled) → **node-cron** / **Agenda.js** tạo job đăng bài tại thời điểm chỉ định |
+| Đăng bài | Background job: khi đến thời điểm → gọi platform API (Facebook Graph API / Twitter API v2 / LinkedIn API) → đăng bài + hình ảnh → cập nhật status = published + platformPostId → thông báo user |
+| Content Calendar | `GET /calendar?month=2025-01` trả danh sách bài đã lên lịch theo tháng (format FullCalendar). Hỗ trợ drag-and-drop đổi ngày |
+| Performance tracking | `GET /posts/:id/metrics` gọi platform API lấy metrics (likes, shares, comments, reach, impressions) → lưu cache Redis (TTL 15 phút) → trả kết quả. `GET /analytics` tổng hợp performance tất cả bài đăng |
+| Token refresh | Background job (**BullMQ**): mỗi 24h kiểm tra + refresh OAuth tokens sắp hết hạn |
+
+### 4.15 API AI Image Generation (`/api/images`) ⭐⭐ NÂNG CAO – KHÓ
+
+| Công việc | Mô tả |
+|-----------|-------|
+| Sinh image prompt | `POST /generate-prompt` nhận contentId → AI đọc nội dung → sinh image prompt phù hợp (mô tả cảnh, style, mood, color palette) → trả prompt + preview keywords |
+| Sinh hình ảnh | `POST /generate` nhận image prompt + style (realistic/illustration/minimalist/cartoon) + size (1024x1024, 1792x1024, 1024x1792) → gọi **DALL-E 3** API hoặc **Stable Diffusion** → sinh 4 biến thể → upload tất cả lên **Cloudinary** → trả URLs + metadata |
+| Auto-resize | `POST /:imageId/resize` nhận platform target (blog-thumbnail, instagram-square, facebook-cover, twitter-header, linkedin-banner) → Cloudinary transformation API resize + crop theo specs → trả URLs cho mỗi size |
+| Gallery quản lý | `GET /` danh sách hình ảnh (phân trang, lọc theo contentId/style). `GET /:id` chi tiết. `DELETE /:id` xóa trên Cloudinary + DB |
+| Image variation | `POST /:imageId/variation` nhận imageId + modification prompt → gọi DALL-E variation API / img2img → sinh biến thể từ ảnh gốc |
+| Auto-generate on content | Hook vào content generation flow: sau khi sinh nội dung → tự động tạo thumbnail suggestion → user chọn accept/reject/regenerate |
+
+### 4.16 API Content Workflow (`/api/workflows`) ⭐⭐ NÂNG CAO – KHÓ
+
+| Công việc | Mô tả |
+|-----------|-------|
+| Tạo workflow template | `POST /templates` nhận danh sách stages `[{ name, assigneeRole, autoChecks, deadline }]` → validate Joi (ít nhất 2 stages, stage cuối phải là "Published") → lưu WorkflowTemplate. Ví dụ: Draft → Content Review → SEO Review → Editor Approval → Published |
+| Khởi chạy workflow | `POST /run` nhận contentId + workflowTemplateId → tạo WorkflowRun (currentStage: stage đầu tiên) → gán assignees → gửi notification |
+| Chuyển stage | `POST /run/:id/transition` nhận action (approve/reject/request-changes) + comment → **xstate** state machine validate transition hợp lệ → cập nhật currentStage → nếu reject: quay về stage trước + ghi reason → nếu approve: chuyển stage tiếp → auto-checks: chạy plagiarism check, SEO score ở stage tương ứng → gửi notification cho assignee stage mới |
+| Comment/Feedback | `POST /run/:id/comments` gửi comment tại stage hiện tại → broadcast qua Socket.io → lưu vào WorkflowRun.comments |
+| Kanban board | `GET /board` trả tất cả content đang trong workflow, nhóm theo stage (format Kanban). Hỗ trợ drag-and-drop chuyển stage |
+| Workflow analytics | `GET /analytics` thống kê: thời gian trung bình mỗi stage, completion rate, rejection rate, bottleneck detection (stage nào tốn thời gian nhất) |
+
+### 4.17 API Người Dùng (`/api/users`)
 
 | Công việc | Mô tả |
 |-----------|-------|
@@ -323,7 +416,7 @@ server/
 | Đổi mật khẩu | `PUT /change-password` nhận password cũ + mới → **bcrypt.compare** password cũ → validate password mới bằng Joi (regex pattern) → **bcrypt.hash** → cập nhật |
 | Thống kê sử dụng | `GET /usage` trả tổng token dùng, số nội dung, giới hạn gói |
 
-### 4.12 API Thanh Toán (`/api/billing`)
+### 4.18 API Thanh Toán (`/api/billing`)
 
 | Công việc | Mô tả |
 |-----------|-------|
@@ -332,14 +425,14 @@ server/
 | Lịch sử thanh toán | `GET /payments` danh sách thanh toán của user |
 | Quản lý subscription | `GET /subscription` xem gói hiện tại, `POST /cancel` hủy subscription |
 
-### 4.13 API Thông Báo (`/api/notifications`)
+### 4.19 API Thông Báo (`/api/notifications`)
 
 | Công việc | Mô tả |
 |-----------|-------|
 | Lấy thông báo | `GET /` danh sách thông báo (phân trang, lọc theo type/isRead) |
 | Đánh dấu đã đọc | `PATCH /:id/read` đánh dấu 1 thông báo, `PATCH /read-all` đánh dấu tất cả |
 
-### 4.14 API Admin (`/api/admin`)
+### 4.20 API Admin (`/api/admin`)
 
 | Công việc | Mô tả |
 |-----------|-------|
@@ -354,7 +447,7 @@ server/
 | Cài đặt hệ thống | `GET /settings` lấy tất cả, `PUT /settings/:key` cập nhật (validate Joi) → ghi AuditLog |
 | Audit log | `GET /audit-logs` lấy log (lọc theo thời gian/user/action bằng **regex**) |
 
-### 4.15 Middleware & Tiện Ích
+### 4.21 Middleware & Tiện Ích
 
 | Thành phần | Mô tả |
 |-----------|-------|
@@ -633,6 +726,140 @@ server/
 | responseTime | Number | Thời gian phản hồi (ms) |
 | createdAt | Date | Ngày tìm kiếm |
 
+### Collection: PipelineRuns (Multi-Agent AI) ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | Người khởi chạy |
+| contentId | ObjectId, ref | Nội dung kết quả cuối (nullable, tạo sau khi pipeline hoàn thành) |
+| brief | String | Yêu cầu đầu vào |
+| type | String, enum | Loại nội dung |
+| tone | String | Tone giọng |
+| language | String | Ngôn ngữ |
+| voiceProfileId | ObjectId, ref | Brand Voice Profile (nullable) |
+| knowledgeBaseIds | [ObjectId], ref | Tài liệu RAG tham khảo |
+| steps | [Object] | `[{ agentName, status, input, output, startedAt, completedAt, tokensUsed, feedback }]` kết quả từng agent |
+| status | String, enum | `running` / `completed` / `failed` / `cancelled` |
+| totalTokensUsed | Number | Tổng token tiêu thụ |
+| totalDuration | Number | Tổng thời gian (ms) |
+| createdAt, updatedAt | Date | Timestamps |
+
+### Collection: VoiceProfiles (Brand Voice) ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | Người tạo |
+| brandName | String | Tên thương hiệu |
+| description | String | Mô tả giọng điệu |
+| sampleContents | [Object] | `[{ text, source, addedAt }]` bài viết mẫu (5-20 bài) |
+| styleAnalysis | Object | `{ vocabularyRichness, avgSentenceLength, sentenceLengthStd, toneMarkers, formalityScore, topKeywords, readabilityLevel }` kết quả phân tích NLP |
+| styleEmbedding | String | ID embedding trong Pinecone (vector trung bình của tất cả samples) |
+| promptInstructions | String | System prompt tự động sinh từ analysis (inject khi generate content) |
+| isActive | Boolean | Đang sử dụng |
+| createdAt, updatedAt | Date | Timestamps |
+
+### Collection: ABTests ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | Người tạo |
+| originalContentId | ObjectId, ref | Nội dung gốc |
+| name | String | Tên test |
+| dimensions | [String] | Dimensions thay đổi (headline, CTA, tone, structure) |
+| variants | [Object] | `[{ variantId, contentId, dimension, description, impressions, clicks, conversions, avgReadTime }]` |
+| status | String, enum | `running` / `completed` / `paused` |
+| winnerVariantId | String | ID variant thắng (nullable) |
+| statisticalSignificance | Object | `{ pValue, confidenceLevel, method, sampleSize }` |
+| autoApply | Boolean | Tự động áp dụng winner |
+| startedAt | Date | Ngày bắt đầu |
+| completedAt | Date | Ngày kết thúc (nullable) |
+| createdAt, updatedAt | Date | Timestamps |
+
+### Collection: TrackingEvents (A/B Testing) ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| testId | ObjectId, ref | A/B Test |
+| variantId | String | ID variant |
+| eventType | String, enum | `impression` / `click` / `conversion` / `read` |
+| visitorId | String | Anonymous visitor ID (cookie-based) |
+| metadata | Object | `{ readTime, scrollDepth, referrer, device, browser }` |
+| createdAt | Date | Ngày ghi event |
+
+### Collection: SocialAccounts ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | User sở hữu |
+| platform | String, enum | `facebook` / `twitter` / `linkedin` / `instagram` |
+| platformUserId | String | ID user trên platform |
+| username | String | Tên tài khoản |
+| avatar | String | Avatar URL |
+| accessToken | String | OAuth access token (mã hóa AES-256) |
+| refreshToken | String | OAuth refresh token (mã hóa AES-256) |
+| tokenExpiresAt | Date | Thời điểm token hết hạn |
+| isConnected | Boolean | Trạng thái kết nối |
+| createdAt, updatedAt | Date | Timestamps |
+
+### Collection: ScheduledPosts (Social Media) ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | Người lên lịch |
+| contentId | ObjectId, ref | Nội dung gốc |
+| socialAccountId | ObjectId, ref | Tài khoản đăng |
+| platform | String, enum | Platform đăng |
+| adaptedContent | String | Nội dung đã adapt cho platform |
+| imageUrls | [String] | Hình ảnh đính kèm |
+| scheduledAt | Date | Thời điểm đăng |
+| publishedAt | Date | Thời điểm đã đăng (nullable) |
+| platformPostId | String | ID bài đăng trên platform (nullable) |
+| status | String, enum | `scheduled` / `publishing` / `published` / `failed` / `cancelled` |
+| errorMessage | String | Lỗi nếu failed |
+| metrics | Object | `{ likes, shares, comments, reach, impressions }` (cập nhật định kỳ) |
+| createdAt, updatedAt | Date | Timestamps |
+
+### Collection: GeneratedImages (AI Image) ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | Người tạo |
+| contentId | ObjectId, ref | Nội dung liên quan (nullable) |
+| prompt | String | Image prompt đã dùng |
+| style | String, enum | `realistic` / `illustration` / `minimalist` / `cartoon` |
+| originalUrl | String | URL ảnh gốc trên Cloudinary |
+| resizedUrls | Object | `{ blogThumbnail, instagramSquare, facebookCover, twitterHeader }` URLs các size |
+| model | String | Model đã dùng (dall-e-3, stable-diffusion) |
+| size | String | Kích thước gốc (1024x1024, etc.) |
+| parentImageId | ObjectId, ref | Ảnh gốc nếu là variation (nullable) |
+| createdAt | Date | Ngày tạo |
+
+### Collection: WorkflowTemplates ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| userId | ObjectId, ref | Người tạo |
+| name | String | Tên workflow |
+| description | String | Mô tả |
+| stages | [Object] | `[{ name, order, assigneeRole, autoChecks: ['plagiarism', 'seo'], deadlineHours }]` |
+| isDefault | Boolean | Workflow mặc định |
+| isActive | Boolean | Đang sử dụng |
+| createdAt, updatedAt | Date | Timestamps |
+
+### Collection: WorkflowRuns ⭐⭐ NÂNG CAO – KHÓ
+
+| Trường | Kiểu | Mô tả |
+|--------|------|-------|
+| contentId | ObjectId, ref | Nội dung trong workflow |
+| workflowTemplateId | ObjectId, ref | Template workflow |
+| createdBy | ObjectId, ref | Người khởi chạy |
+| currentStage | Object | `{ name, order, assigneeId, enteredAt, deadline }` stage hiện tại |
+| history | [Object] | `[{ stageName, action, userId, comment, autoCheckResults, timestamp }]` lịch sử transitions |
+| comments | [Object] | `[{ userId, stageName, content, createdAt }]` feedback tại mỗi stage |
+| status | String, enum | `in-progress` / `completed` / `rejected` / `cancelled` |
+| completedAt | Date | Ngày hoàn thành (nullable) |
+| createdAt, updatedAt | Date | Timestamps |
+
 ---
 
 ## 6. Giao Diện (Routes) Tổng Hợp
@@ -662,6 +889,12 @@ server/
 | `/collaborate/:id` | Real-time Collaboration – chỉnh sửa cùng lúc ⭐ |
 | `/analytics` | Content Analytics – phân tích NLP nội dung ⭐ |
 | `/plagiarism-check` | Plagiarism Detection – kiểm tra đạo văn ⭐ |
+| `/agent-generate` | Multi-Agent AI Generate – sinh nội dung bằng pipeline nhiều agent ⭐⭐ |
+| `/brand-voice` | Brand Voice Studio – nhân bản giọng điệu thương hiệu ⭐⭐ |
+| `/ab-testing` | A/B Content Testing – tối ưu nội dung tự động ⭐⭐ |
+| `/social-publish` | Social Media Publishing – tự động đăng bài mạng xã hội ⭐⭐ |
+| `/image-studio` | AI Image Studio – sinh hình minh họa bằng AI ⭐⭐ |
+| `/content-workflow` | Content Workflow – quy trình duyệt nội dung nhiều bước ⭐⭐ |
 | `/profile` | Hồ sơ cá nhân & cài đặt |
 | `/billing` | Gói dịch vụ & thanh toán |
 | `/notifications` | Thông báo |
@@ -757,6 +990,60 @@ Các tính năng dưới đây là những thành phần **kỹ thuật khó**, 
 | **Kiến trúc** | Push/PR → GitHub Actions: (1) Lint (ESLint + Prettier) → (2) Unit Tests (Jest) → (3) Integration Tests → (4) Build (Docker) → (5) Deploy (Vercel for frontend, Docker for backend) |
 | **Thách thức kỹ thuật** | Multi-stage Docker builds, environment-specific configs, secrets management, parallel job execution, deployment rollback strategy, database migration automation |
 | **Công nghệ** | GitHub Actions, Docker multi-stage builds, Jest (testing), ESLint + Prettier (linting), Vercel CLI (frontend deploy) |
+
+### 7.9 Multi-Agent AI Content Pipeline ⭐⭐ KHÓ
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Sinh nội dung bằng 1 lần gọi AI cho kết quả chất lượng trung bình → cần pipeline nhiều bước chuyên biệt, mỗi bước do 1 AI agent chuyên trách xử lý → nội dung chất lượng cao hơn đáng kể |
+| **Kiến trúc** | **LangGraph-inspired DAG workflow**: User Brief → (1) **Research Agent** (search web + RAG knowledge base → research notes) → (2) **Writer Agent** (research notes + brief + tone + voice profile → draft) → (3) **Editor Agent** (draft → grammar check, flow improvement, consistency → edited version) → (4) **SEO Optimizer Agent** (edited content + target keywords → SEO-optimized final version). Mỗi agent có system prompt riêng, temperature riêng, model riêng (có thể khác nhau). Feedback loop: user review kết quả mỗi step → gửi feedback → agent chạy lại |
+| **Thách thức kỹ thuật** | Thiết kế agent orchestrator (DAG execution engine), inter-agent communication protocol (message passing format), feedback loop mechanism, error recovery (agent thất bại → retry / skip / fallback), streaming output cho mỗi step qua Socket.io, token budget management (phân bổ token cho mỗi agent), latency optimization (pipeline 4 bước = 4x latency → cần parallel execution khi có thể), state persistence (resume pipeline sau khi user feedback) |
+| **Công nghệ** | LangChain.js (Agent framework), custom DAG executor, Socket.io (real-time step updates), BullMQ (background pipeline execution), Redis (pipeline state cache) |
+
+### 7.10 Brand Voice Cloning ⭐⭐ KHÓ
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | AI sinh nội dung với giọng điệu generic → doanh nghiệp cần AI viết theo đúng giọng điệu thương hiệu riêng (formal vs casual, technical vs simple, tone markers cụ thể) |
+| **Kiến trúc** | (1) **Sample Collection**: thu thập 5-20 bài viết mẫu → (2) **Style Analysis Pipeline**: Tokenization → POS Tagging → Vocabulary Richness (TTR, Hapax Legomena) → Sentence Structure Analysis (length distribution, complexity) → Tone Detection (formal/casual/professional/humorous markers) → Formality Scoring → Keyword Preferences (TF-IDF) → (3) **Embedding Generation**: average embedding of all samples → (4) **Profile Generation**: tổng hợp analysis → sinh system prompt instructions → (5) **Constrained Generation**: inject voice profile vào generation pipeline |
+| **Thách thức kỹ thuật** | NLP style analysis chính xác (phân biệt subtle tone differences), vocabulary richness metrics (TTR sensitive to text length → cần normalized TTR), Vietnamese language support (word segmentation, POS tagging cho tiếng Việt), voice consistency scoring algorithm (so sánh generated content với profile), embedding quality cho style representation, prompt engineering để AI tuân thủ style constraints |
+| **Công nghệ** | natural + compromise (NLP analysis), OpenAI Embeddings (style embedding), Pinecone (voice profile storage), custom TF-IDF implementation, statistical analysis (mean, std, distribution fitting) |
+
+### 7.11 AI-Powered A/B Testing ⭐⭐ KHÓ
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Không biết version nội dung nào hiệu quả nhất → cần sinh nhiều biến thể và đo lường khách quan bằng thống kê |
+| **Kiến trúc** | (1) **Variant Generation**: AI sinh 2-5 biến thể (thay đổi headline/CTA/tone/structure) → (2) **Traffic Splitting**: tracking pixel phân phối impressions đều → (3) **Data Collection**: ghi nhận impressions, clicks, conversions, read time → (4) **Statistical Analysis**: t-test (2 variants) hoặc chi-squared (nhiều variants), Bayesian analysis → (5) **Decision**: khi p-value < 0.05 + minimum sample size → declare winner → auto-apply |
+| **Thách thức kỹ thuật** | AI variant generation có ý nghĩa (không chỉ paraphrase mà thay đổi strategy), tracking pixel implementation (cross-domain, cookie-less tracking), statistical significance calculation (t-test, chi-squared, Bayesian), minimum sample size calculation (power analysis), early stopping rules (avoid peeking problem), multiple comparison correction (Bonferroni khi >2 variants) |
+| **Công nghệ** | OpenAI GPT-4 (variant generation), tracking pixel (Express.js endpoint), jstat/simple-statistics (statistical testing), BullMQ (periodic analysis), Redis (real-time counters) |
+
+### 7.12 Social Media Auto-Publishing ⭐⭐ KHÓ
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Sau khi tạo nội dung, user phải copy-paste thủ công lên từng mạng xã hội → cần tự động adapt content + lên lịch + đăng bài |
+| **Kiến trúc** | (1) **OAuth Connection**: kết nối tài khoản MXH → (2) **Content Adaptation**: AI tự động điều chỉnh nội dung cho từng platform (character limits, hashtag strategy, image specs, CTA format) → (3) **Scheduling Engine**: cron-based job scheduler (node-cron/Agenda.js) → (4) **Publishing**: gọi platform APIs (Facebook Graph, Twitter v2, LinkedIn) → (5) **Performance Tracking**: định kỳ lấy metrics từ platform APIs |
+| **Thách thức kỹ thuật** | Multi-platform OAuth management (mỗi platform có flow khác nhau), token refresh automation (access tokens hết hạn), content adaptation AI (platform-specific requirements rất khác nhau), reliable job scheduling (cron jobs miss khi server restart → cần persistent scheduling), rate limiting từ platform APIs, error handling (API changes, permission revoked), image upload cho mỗi platform (different specs) |
+| **Công nghệ** | Passport.js (OAuth strategies), facebook-nodejs-business-sdk, twitter-api-v2, linkedin-api, node-cron/Agenda.js (scheduling), BullMQ (publishing jobs), Redis (token cache), AES-256 encryption (token storage) |
+
+### 7.13 AI Image Generation ⭐⭐ KHÓ
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Nội dung cần hình ảnh minh họa → designer mất thời gian → AI tự động sinh hình ảnh phù hợp với nội dung |
+| **Kiến trúc** | (1) **Prompt Engineering**: đọc content text → AI sinh image prompt mô tả (scene, objects, style, mood, color) → (2) **Image Generation**: gọi DALL-E 3 / Stable Diffusion → sinh 4 biến thể → (3) **Post-processing**: upload Cloudinary → auto-resize cho các platform → (4) **Gallery**: quản lý hình ảnh, tag theo content/style |
+| **Thách thức kỹ thuật** | Content-to-image prompt engineering (biến nội dung text thành image description chính xác), image style consistency (sinh nhiều ảnh cùng style), auto-resize giữ chất lượng (aspect ratio handling, smart crop), cost optimization (DALL-E 3 đắt → caching, lazy generation), image variation (giữ concept nhưng thay đổi style/composition), integration với content pipeline (auto-suggest thumbnails) |
+| **Công nghệ** | OpenAI DALL-E 3 API, Stability AI (Stable Diffusion), Cloudinary (storage + transformation + resize), BullMQ (background generation), Sharp (local image processing) |
+
+### 7.14 Content Workflow Engine (State Machine) ⭐⭐ KHÓ
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Nội dung cần qua nhiều bước duyệt trước khi xuất bản (viết → review → chỉnh sửa → duyệt → xuất bản) → cần workflow engine quản lý trạng thái + transitions + permissions |
+| **Kiến trúc** | **XState State Machine**: định nghĩa states (Draft, Review, Editing, Approved, Published) + transitions (submit, approve, reject, request-changes, publish) + guards (kiểm tra permission, auto-checks) → mỗi transition trigger: notification, auto-checks (plagiarism, SEO), deadline calculation → Kanban board visualization |
+| **Thách thức kỹ thuật** | State machine design cho flexible workflows (user tạo custom workflow), permission management per stage (ai được approve ở stage nào), auto-checks integration (chạy plagiarism + SEO check tự động ở stage cụ thể), deadline tracking + escalation (quá hạn → thông báo manager), concurrent workflow runs (nhiều content trong cùng workflow), audit trail (ghi lại mọi transition) |
+| **Công nghệ** | xstate (state machine library), Socket.io (real-time Kanban updates), BullMQ (auto-checks, deadline monitoring), Redis (workflow state cache) |
 
 ---
 
