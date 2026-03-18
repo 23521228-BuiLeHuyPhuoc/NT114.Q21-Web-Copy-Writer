@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: ai-copywriter-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: ai-copywriter
+
+  # Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ai-copywriter-server
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/ai-copywriter
+      - JWT_SECRET=your-jwt-secret-change-in-production
+      - JWT_REFRESH_SECRET=your-refresh-secret-change-in-production
+      - CORS_ORIGIN=http://localhost:3000
+      - NODE_ENV=development
+    volumes:
+      - ./server/src:/app/src
+    command: npm run dev
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: ai-copywriter-client
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    volumes:
+      - ./client/src:/app/src
+    command: npm run dev
+
+volumes:
+  mongodb_data:

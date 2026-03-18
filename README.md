@@ -9,6 +9,169 @@
 
 ---
 
+## ⭐ Tính Năng Nâng Cao (Advanced Features)
+
+Dự án triển khai **7 tính năng kỹ thuật nâng cao** thể hiện kiến thức chuyên sâu về thuật toán, kiến trúc hệ thống, và kỹ thuật lập trình:
+
+### 🔴 Tính năng 1: Real-time Streaming Content Generation (SSE)
+
+**Độ khó: ⭐⭐⭐⭐⭐**
+
+Triển khai Server-Sent Events (SSE) để stream nội dung AI theo thời gian thực, hiển thị từng từ một (giống ChatGPT).
+
+- **Kỹ thuật:** Server-Sent Events (SSE), EventEmitter pattern, back-pressure handling
+- **File:** `server/src/services/advanced/streamingGenerator.ts`
+- **API:** `POST /api/content/generate` → SSE stream
+- **Chi tiết:**
+  - Stream nội dung word-by-word với delay thực tế (20-80ms)
+  - Hỗ trợ 8 loại nội dung: blog, quảng cáo, email, mô tả sản phẩm, social media, SEO, script, headline
+  - Progress tracking và abort/cancel mid-stream
+  - Connection management với auto-cleanup
+
+### 🟠 Tính năng 2: Plagiarism Detection Engine (4 thuật toán)
+
+**Độ khó: ⭐⭐⭐⭐⭐**
+
+Engine phát hiện đạo văn sử dụng 4 thuật toán NLP/Text Similarity:
+
+- **File:** `server/src/services/advanced/plagiarismDetector.ts`
+- **API:** `POST /api/content/check-plagiarism`
+- **Thuật toán:**
+  1. **Cosine Similarity (TF-IDF):** So sánh vector space model của hai văn bản bằng TF-IDF vectors. Công thức: `cos(θ) = (A · B) / (||A|| × ||B||)`
+  2. **Jaccard Similarity (N-gram):** So sánh tập hợp n-gram giữa hai văn bản. Công thức: `J(A,B) = |A ∩ B| / |A ∪ B|`
+  3. **Longest Common Subsequence (LCS):** Thuật toán Dynamic Programming tìm chuỗi con chung dài nhất. Độ phức tạp: O(m × n), tối ưu space O(min(m,n))
+  4. **Winnowing Algorithm (Document Fingerprinting):** Tạo fingerprint cho document bằng thuật toán winnowing, so sánh fingerprint sets
+- **Kết quả:** Điểm tổng hợp (weighted average), risk level, matched segments
+
+### 🟡 Tính năng 3: SEO Content Analysis Engine
+
+**Độ khó: ⭐⭐⭐⭐⭐**
+
+Engine phân tích SEO toàn diện sử dụng nhiều công thức readability và NLP:
+
+- **File:** `server/src/services/advanced/seoAnalyzer.ts`
+- **API:** `POST /api/content/analyze-seo`
+- **Công thức Readability:**
+  1. **Flesch-Kincaid Grade Level:** `0.39 × (words/sentences) + 11.8 × (syllables/words) - 15.59`
+  2. **Flesch Reading Ease:** `206.835 - 1.015 × (words/sentences) - 84.6 × (syllables/words)`
+  3. **Coleman-Liau Index:** `0.0588 × L - 0.296 × S - 15.8`
+  4. **Automated Readability Index (ARI):** `4.71 × (chars/words) + 0.5 × (words/sentences) - 21.43`
+- **Phân tích khác:**
+  - Keyword density analysis với TF-IDF ranking
+  - Co-occurrence analysis cho gợi ý keyword
+  - Content structure analysis (headings, lists, links, images)
+  - Passive voice detection, transition word analysis
+  - Vocabulary richness (unique words / total words)
+
+### 🟢 Tính năng 4: Content Version Control with Diff
+
+**Độ khó: ⭐⭐⭐⭐**
+
+Hệ thống quản lý phiên bản nội dung giống Git:
+
+- **File:** `server/src/services/advanced/contentVersioning.ts`
+- **API:** `POST /api/content/:id/version`, `GET /api/content/:id/versions/compare`
+- **Thuật toán:**
+  - **Myers Diff Algorithm** (thuật toán diff của Git): Tìm shortest edit script giữa 2 version. Độ phức tạp: O(ND)
+  - **Three-way Merge:** Merge 2 branch content từ common base, detect conflicts
+  - **Delta Storage:** Chỉ lưu diff thay vì full content (tiết kiệm bộ nhớ)
+  - **Unified Diff Format:** Tạo output diff giống `git diff`
+
+### 🔵 Tính năng 5: WebSocket Real-time Notifications
+
+**Độ khó: ⭐⭐⭐⭐**
+
+Hệ thống thông báo real-time bidirectional sử dụng Socket.IO:
+
+- **File:** `server/src/services/advanced/notificationService.ts`
+- **Kỹ thuật:**
+  - User-specific notification channels (room-based)
+  - Broadcast notifications (admin → all users)
+  - Project collaboration rooms
+  - Presence tracking (online/offline status)
+  - WebSocket event rate limiting (30 events/10s/socket)
+  - Authentication middleware cho WebSocket connections
+  - Automatic reconnection và connection management
+
+### 🟣 Tính năng 6: Sliding Window Rate Limiting Algorithm
+
+**Độ khó: ⭐⭐⭐⭐**
+
+Triển khai thuật toán rate limiting sliding window (chính xác hơn fixed window):
+
+- **File:** `server/src/services/advanced/rateLimiter.ts`
+- **Thuật toán:**
+  - **Sliding Window:** `effectiveCount = previousCount × overlapPercentage + currentCount`
+  - `overlapPercentage = (windowMs - elapsed) / windowMs`
+  - Amortized O(1) time, O(n) space
+- **Tính năng:**
+  - Standard rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset)
+  - Configurable key generator, skip failed requests
+  - Auto-cleanup expired entries
+  - Per-key reset capability
+  - 3 pre-configured limiters: API (100/15min), AI Generation (10/15min), Auth (5/15min)
+
+### ⚪ Tính năng 7: Template Engine with Custom DSL Parser
+
+**Độ khó: ⭐⭐⭐⭐⭐**
+
+Mini programming language implementation với lexer, parser, và evaluator:
+
+- **File:** `server/src/services/advanced/templateEngine.ts`
+- **API:** `POST /api/templates/render`, `POST /api/templates/validate`
+- **Tính năng DSL:**
+  - **Variable interpolation:** `{{variable}}`, `{{user.name}}` (dot notation)
+  - **Conditionals:** `{{#if condition}}...{{else}}...{{/if}}`
+  - **Loops:** `{{#each items as item}}...{{/each}}` với `@index`, `@first`, `@last`
+  - **Filters/Pipes:** `{{variable | uppercase}}`, `{{title | slug}}`
+  - 10 built-in filters: uppercase, lowercase, capitalize, trim, truncate, slug, reverse, wordcount, sentencecase, striphtml
+- **Compiler concepts:** Lexical analysis (tokenizer) → Syntax analysis (parser) → AST → Evaluation
+
+---
+
+### 📊 Tổng Hợp Tests
+
+| Feature | Tests | Status |
+|---------|-------|--------|
+| Plagiarism Detection | 14 tests | ✅ Pass |
+| SEO Analysis | 14 tests | ✅ Pass |
+| Content Versioning | 15 tests | ✅ Pass |
+| Rate Limiter | 7 tests | ✅ Pass |
+| Template Engine | 26 tests | ✅ Pass |
+| **Tổng** | **76 tests** | **✅ All Pass** |
+
+---
+
+## Hướng Dẫn Chạy Dự Án
+
+### Backend (Server)
+```bash
+cd server
+npm install
+npm run dev        # Development mode
+npm test           # Run 76 tests
+npm run build      # Build for production
+```
+
+### Frontend (Client)
+```bash
+cd client
+npm install
+npm run dev        # Development mode (http://localhost:3000)
+npm run build      # Build for production
+```
+
+### Chạy Full Stack
+```bash
+# Terminal 1 - Backend
+cd server && npm run dev
+
+# Terminal 2 - Frontend
+cd client && npm run dev
+```
+
+---
+
 ## 1. Công Nghệ Sử Dụng
 
 ### 1.1 Frontend (Client)
