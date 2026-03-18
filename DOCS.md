@@ -14,7 +14,7 @@
 | TypeScript | Express.js | MongoDB | Tích hợp Llama |
 | Tailwind CSS | Mongoose | MongoDB Atlas | API RESTful cho AI |
 | Axios | Bcrypt | Docker + Docker Compose | Fine-tuning |
-| React Hook Form | Joi.dev | | Streaming (SSE) |
+| React Hook Form | Joi.dev | Redis | Streaming (SSE) |
 | React Query | Regex | Elasticsearch | RAG (Retrieval-Augmented Generation) ⭐ |
 | React Markdown | JWT | Pinecone / Qdrant (Vector DB) ⭐ | NLP Content Analytics ⭐ |
 | Chart.js | Multer | | AI Plagiarism Detection ⭐ |
@@ -29,6 +29,7 @@
 | | morgan | | |
 | | yarn | | |
 | | Stripe SDK | | |
+| | BullMQ + Redis ⭐ | | |
 | | Elasticsearch client ⭐ | | |
 | | natural / compromise (NLP) ⭐ | | |
 | | pdf-parse / mammoth ⭐ | | |
@@ -88,15 +89,16 @@ client/
 ```
 server/
 ├── src/
-│   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, elasticsearch, ...)
+│   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, redis, elasticsearch, ...)
 │   ├── models/                 # Mongoose schemas & models (User, Content, Template, Document, ...)
 │   ├── routes/                 # Định nghĩa API routes (authRoutes, contentRoutes, ragRoutes, analyticsRoutes, ...)
 │   ├── controllers/            # Xử lý logic từng route (authController, contentController, ragController, ...)
 │   ├── services/               # Business logic (aiService, ragService, nlpService, plagiarismService, searchService, ...)
-│   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, errorHandler)
+│   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, cache, errorHandler)
 │   ├── validations/            # Joi validation schemas (authValidation, contentValidation, ragValidation, ...)
+│   ├── jobs/                   # BullMQ job processors (fineTuneJob, embeddingJob, analyticsJob, bulkGenerateJob)
 │   ├── utils/                  # Hàm tiện ích (regex patterns, email sender, token generator, ...)
-│   └── app.js                  # Entry point – khởi tạo Express, Elasticsearch, mount routes
+│   └── app.js                  # Entry point – khởi tạo Express, Redis, Elasticsearch, mount routes
 ├── uploads/                    # Thư mục tạm lưu file upload trước khi đẩy lên Cloudinary
 ├── .env.example                # Mẫu biến môi trường
 ├── package.json                # Dependencies & scripts
@@ -187,6 +189,7 @@ server/
 5. **Rate Limiting** – 100 req/15 phút (chung), 10 req/15 phút (AI generate)
 6. **Helmet + CORS** – bảo mật HTTP headers
 7. **Multer + Cloudinary** – upload file an toàn, lưu trữ cloud
+8. **Redis Caching** ⭐ – cache API responses (TTL configurable), invalidate on write, distributed rate limiting
 
 ---
 
@@ -310,11 +313,17 @@ Các tính năng dưới đây là những thành phần **kỹ thuật khó**, 
 ### 7.4 Elasticsearch Full-text Search (Vietnamese Support)
 
 + **Vấn đề:** MongoDB text search không hỗ trợ tốt tiếng Việt → cần search engine chuyên dụng
-+ **Kiến trúc:** MongoDB → Elasticsearch Index (ICU analyzer + Vietnamese tokenizer) → Search API (multi_match, completion suggester, aggregations, faceted search)
++ **Kiến trúc:** MongoDB → BullMQ sync → Elasticsearch Index (ICU analyzer + Vietnamese tokenizer) → Search API (multi_match, completion suggester, aggregations, faceted search)
 + **API:** `/api/search/*` (full-text search, auto-complete, faceted search)
 + **DB:** SearchLogs + Elasticsearch indices
 
-### 7.5 CI/CD Pipeline (GitHub Actions)
+### 7.5 Redis Caching & Background Jobs (BullMQ)
+
++ **Vấn đề:** API calls tốn thời gian (AI, analytics, search) → cần caching + long-running tasks cần background processing
++ **Kiến trúc:** Redis cache (TTL-based, write-through invalidation) + BullMQ job queues (embedding-queue, analytics-queue, fine-tune-queue, email-queue, search-sync-queue)
++ **Công nghệ:** Redis 7.x, ioredis, BullMQ, Bull Board (monitoring)
+
+### 7.6 CI/CD Pipeline (GitHub Actions)
 
 + **Vấn đề:** Manual deployment dễ lỗi → cần CI/CD pipeline tự động
 + **Kiến trúc:** Push/PR → Lint (ESLint + Prettier) → Unit Tests (Jest) → Integration Tests → Build (Docker multi-stage) → Deploy (Vercel frontend, Docker backend)

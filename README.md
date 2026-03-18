@@ -5,8 +5,8 @@
 - **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
 - **Môn học:** NT114.Q21
 - **Thực hiện:** Bùi Lê Huy Phước
-- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Ngoài ra, hệ thống tích hợp **5 tính năng nâng cao** bao gồm:
-  - RAG, NLP Analytics, Plagiarism Detection, Elasticsearch, CI/CD
+- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Ngoài ra, hệ thống tích hợp **7 tính năng nâng cao** bao gồm:
+  - RAG, NLP Analytics, Plagiarism Detection, Elasticsearch, Redis Caching, BullMQ + CI/CD
   - *(Xem chi tiết tại [Mục 7 – Tính Năng Nâng Cao](#7-tính-năng-nâng-cao-advanced-features-))*
 
 ---
@@ -53,6 +53,7 @@
 | **morgan** | Logging HTTP request |
 | **passport + passport-google-oauth20** | Đăng nhập qua Google OAuth 2.0 |
 | **Stripe SDK** | Tích hợp thanh toán quốc tế |
+| **BullMQ + Redis** | Message queue xử lý background jobs (fine-tuning, bulk generation, analytics) |
 | **Elasticsearch** | Full-text search engine hỗ trợ tiếng Việt (tìm kiếm nội dung, template) |
 | **natural / compromise** | Thư viện NLP: tokenization, sentiment analysis, readability scoring |
 | **pdf-parse / mammoth** | Trích xuất nội dung từ PDF/DOCX phục vụ RAG pipeline |
@@ -66,6 +67,7 @@
 |-----------|---------|
 | **MongoDB** | Cơ sở dữ liệu NoSQL lưu trữ toàn bộ dữ liệu |
 | **MongoDB Atlas** | Hosting MongoDB trên cloud |
+| **Redis (AWS ElastiCache / local)** | In-memory data store cho caching, session, message queue |
 | **Elasticsearch (Elastic Cloud / local)** | Search engine cho full-text search tiếng Việt |
 | **Pinecone / Qdrant** | Vector database cho RAG embeddings |
 | **Docker + Docker Compose** | Container hoá ứng dụng, môi trường phát triển |
@@ -140,15 +142,16 @@ client/
 ```
 server/
 ├── src/
-│   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, elasticsearch, ...)
+│   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, redis, elasticsearch, ...)
 │   ├── models/                 # Mongoose schemas & models (User, Content, Template, Document, ...)
 │   ├── routes/                 # Định nghĩa API routes (authRoutes, contentRoutes, ragRoutes, analyticsRoutes, ...)
 │   ├── controllers/            # Xử lý logic từng route (authController, contentController, ragController, ...)
 │   ├── services/               # Business logic (aiService, ragService, nlpService, plagiarismService, searchService, ...)
-│   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, errorHandler)
+│   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, cache, errorHandler)
 │   ├── validations/            # Joi validation schemas (authValidation, contentValidation, ragValidation, ...)
+│   ├── jobs/                   # BullMQ job processors (fineTuneJob, embeddingJob, analyticsJob, bulkGenerateJob)
 │   ├── utils/                  # Hàm tiện ích (regex patterns, email sender, token generator, ...)
-│   └── app.js                  # Entry point – khởi tạo Express, Elasticsearch, mount routes
+│   └── app.js                  # Entry point – khởi tạo Express, Redis, Elasticsearch, mount routes
 ├── uploads/                    # Thư mục tạm lưu file upload trước khi đẩy lên Cloudinary
 ├── .env.example                # Mẫu biến môi trường
 ├── package.json                # Dependencies & scripts
@@ -261,7 +264,7 @@ server/
 | Quản lý tài liệu | `GET /documents` danh sách tài liệu (phân trang), `GET /documents/:id` chi tiết, `DELETE /documents/:id` xóa tài liệu + xóa embeddings trong Pinecone |
 | Semantic search | `POST /search` nhận query text → tạo embedding cho query → truy vấn Pinecone (top-k nearest neighbors, cosine similarity) → trả về chunks liên quan nhất kèm relevance score |
 | RAG Generation | `POST /generate` nhận prompt + documentIds → truy vấn semantic search → lấy top-k context chunks → xây dựng augmented prompt: `[System] + [Retrieved Context] + [User Prompt]` → gọi AI model (GPT-4/Llama) → streaming response → lưu content với metadata RAG (sourceDocuments, chunks used) |
-| Quản lý embeddings | Xử lý tạo embeddings cho tài liệu lớn. Retry logic khi API lỗi. Batch processing cho nhiều chunks |
+| Quản lý embeddings | Background job (**BullMQ**) xử lý tạo embeddings cho tài liệu lớn. Retry logic khi API lỗi. Batch processing cho nhiều chunks |
 
 ### 4.7 API NLP Content Analytics (`/api/analytics`) ⭐ NÂNG CAO
 
@@ -272,7 +275,7 @@ server/
 | Keyword extraction | `POST /keywords` nhận content text → TF-IDF analysis + NLP noun phrase extraction → trả danh sách keywords với frequency, density (%), relevance score. Hỗ trợ cả tiếng Anh và tiếng Việt (dùng regex + dictionary-based segmentation) |
 | SEO scoring | `POST /seo-score` nhận content + target keyword → phân tích: keyword density, heading structure (H1-H6), meta description length, internal/external links, image alt text, content length → trả SEO score (0-100) + chi tiết từng tiêu chí + đề xuất tối ưu |
 | Content comparison | `POST /compare` nhận 2+ contentIds → so sánh readability, sentiment, keyword overlap, length → trả bảng so sánh + đề xuất version tốt nhất |
-| Batch analytics | Khi user sinh nội dung mới → tự động chạy analytics → lưu kết quả vào ContentAnalytics collection → hiển thị trên dashboard |
+| Batch analytics | Background job (**BullMQ**): khi user sinh nội dung mới → tự động chạy analytics → lưu kết quả vào ContentAnalytics collection → hiển thị trên dashboard |
 
 ### 4.8 API Plagiarism Detection (`/api/plagiarism`) ⭐ NÂNG CAO
 
@@ -290,7 +293,7 @@ server/
 | Full-text search | `GET /contents?q=keyword` → **Elasticsearch** query (multi_match trên title + generatedContent + tags) → hỗ trợ tiếng Việt (ICU analyzer + custom Vietnamese tokenizer) → trả kết quả với highlight matches + relevance score |
 | Auto-complete / Suggestions | `GET /suggest?q=partial` → Elasticsearch completion suggester → trả gợi ý tìm kiếm real-time |
 | Faceted search | `GET /contents?q=keyword&type=blog&tone=formal` → Elasticsearch aggregations → trả kết quả + facet counts (theo type, tone, language, model) |
-| Index sync | Khi content được tạo/sửa/xóa trong MongoDB → đồng bộ index Elasticsearch. Bulk reindex API cho admin |
+| Index sync | Khi content được tạo/sửa/xóa trong MongoDB → **BullMQ** job đồng bộ index Elasticsearch. Bulk reindex API cho admin |
 | Search analytics | Ghi log search queries → phân tích top searches, zero-result queries → cải thiện search relevance |
 
 ### 4.10 API Người Dùng (`/api/users`)
@@ -343,6 +346,7 @@ server/
 | `upload.js` middleware | Cấu hình **Multer**: storage (disk), file filter (chỉ cho phép image/csv/json), size limit (5MB ảnh, 50MB dataset) |
 | `rateLimiter.js` middleware | **express-rate-limit**: giới hạn 100 req/15 phút cho API chung, 10 req/15 phút cho API sinh nội dung (tránh lạm dụng AI) |
 | `errorHandler.js` middleware | Bắt tất cả lỗi → format response thống nhất `{ success: false, message, errors }` |
+| `cache.js` middleware | **Redis** caching middleware: cache GET responses (TTL configurable), invalidate on POST/PUT/DELETE. Cache key = URL + query params + userId |
 | **Regex patterns** (`utils/`) | `EMAIL_REGEX` validate email, `PHONE_REGEX` validate SĐT, `URL_REGEX` validate URL, `SLUG_REGEX` validate slug, `SEARCH_REGEX(keyword)` tạo regex tìm kiếm không dấu từ keyword input, `PASSWORD_REGEX` validate password strength |
 | **Cloudinary** (`services/`) | Upload ảnh avatar/logo lên Cloudinary → trả `secure_url`. Xóa ảnh cũ khi cập nhật. Tự động resize/optimize |
 
@@ -657,7 +661,7 @@ Các tính năng dưới đây là những thành phần **kỹ thuật khó**, 
 | **Vấn đề giải quyết** | AI sinh nội dung chung chung, không dựa trên dữ liệu riêng của doanh nghiệp → cần cơ chế cho AI "đọc" tài liệu tham khảo |
 | **Kiến trúc** | Document Upload → Text Extraction (pdf-parse, mammoth) → Chunking (RecursiveCharacterTextSplitter, 500 tokens, overlap 100) → Embedding (OpenAI text-embedding-3-small, 1536 dimensions) → Vector Store (Pinecone) → Query Time: User Prompt → Embedding → Similarity Search (top-k=5, cosine) → Context Injection → LLM Generation |
 | **Thách thức kỹ thuật** | Chunking strategy tối ưu (không cắt giữa câu), handling large documents (>50MB hoặc >200,000 tokens), embedding batch processing, vector database indexing performance, context window management (không vượt quá token limit model) |
-| **Công nghệ** | OpenAI Embeddings API, Pinecone vector database, LangChain.js (DocumentLoader, TextSplitter, VectorStore, RetrievalQAChain) |
+| **Công nghệ** | OpenAI Embeddings API, Pinecone vector database, LangChain.js (DocumentLoader, TextSplitter, VectorStore, RetrievalQAChain), BullMQ (background embedding jobs) |
 
 ### 7.2 NLP Content Analytics Pipeline
 
@@ -666,7 +670,7 @@ Các tính năng dưới đây là những thành phần **kỹ thuật khó**, 
 | **Vấn đề giải quyết** | User không biết chất lượng nội dung AI sinh ra → cần phân tích tự động và đề xuất cải thiện |
 | **Kiến trúc** | Content Text → NLP Pipeline: (1) Tokenization → (2) Readability Scoring (Flesch-Kincaid, Coleman-Liau, Gunning Fog, SMOG) → (3) Sentiment Analysis (lexicon-based + ML) → (4) Keyword Extraction (TF-IDF + noun phrase) → (5) SEO Scoring (rule-based) → Analytics Report + AI-powered Suggestions |
 | **Thách thức kỹ thuật** | Hỗ trợ đa ngôn ngữ (tiếng Việt + tiếng Anh), Vietnamese word segmentation (không có dấu cách giữa các từ), custom sentiment lexicon cho tiếng Việt, real-time analytics (chạy song song với content generation), batch processing cho analytics dashboard |
-| **Công nghệ** | natural (NLP library), compromise (English NLP), custom Vietnamese tokenizer (regex-based), TF-IDF implementation |
+| **Công nghệ** | natural (NLP library), compromise (English NLP), custom Vietnamese tokenizer (regex-based), TF-IDF implementation, BullMQ (background analytics jobs) |
 
 ### 7.3 AI Plagiarism Detection System
 
@@ -675,18 +679,36 @@ Các tính năng dưới đây là những thành phần **kỹ thuật khó**, 
 | **Vấn đề giải quyết** | AI có thể sinh nội dung trùng lặp với nội dung đã tạo trước đó hoặc nội dung trên web → cần phát hiện và cảnh báo |
 | **Kiến trúc** | Content → Segmentation (chia thành đoạn 3-5 câu) → Embedding (OpenAI) → Cosine Similarity Search (so với database embeddings + web scraping) → Threshold Detection (>85% = trùng lặp) → Report Generation (highlight đoạn trùng, nguồn gốc, % tổng) |
 | **Thách thức kỹ thuật** | Efficient similarity search trên large-scale data, fuzzy matching (paraphrased content), web scraping reliability, false positive reduction, performance optimization (tránh N×M comparison) |
-| **Công nghệ** | OpenAI Embeddings, Pinecone (similarity search), cosine similarity algorithm, web scraping (cheerio + axios) |
+| **Công nghệ** | OpenAI Embeddings, Pinecone (similarity search), cosine similarity algorithm, web scraping (cheerio + axios), BullMQ (background checking) |
 
 ### 7.4 Elasticsearch Full-text Search (Vietnamese Support)
 
 | Khía cạnh | Chi tiết |
 |-----------|----------|
 | **Vấn đề giải quyết** | MongoDB text search không hỗ trợ tốt tiếng Việt, không có relevance scoring, không auto-complete → cần search engine chuyên dụng |
-| **Kiến trúc** | MongoDB (source of truth) → Elasticsearch Index (custom Vietnamese analyzer) → Search API (multi_match, completion suggester, aggregations) → Client (auto-complete, faceted search, highlighted results) |
+| **Kiến trúc** | MongoDB (source of truth) → BullMQ sync jobs → Elasticsearch Index (custom Vietnamese analyzer) → Search API (multi_match, completion suggester, aggregations) → Client (auto-complete, faceted search, highlighted results) |
 | **Thách thức kỹ thuật** | Vietnamese tokenization (ICU analyzer + custom dictionary), index mapping optimization, real-time sync MongoDB ↔ Elasticsearch (eventual consistency), search relevance tuning (boost fields, function_score), horizontal scaling, zero-downtime reindexing |
-| **Công nghệ** | Elasticsearch 8.x, @elastic/elasticsearch (Node.js client), ICU Analysis plugin |
+| **Công nghệ** | Elasticsearch 8.x, @elastic/elasticsearch (Node.js client), ICU Analysis plugin, BullMQ (index sync), Redis (search cache) |
 
-### 7.5 CI/CD Pipeline (GitHub Actions)
+### 7.5 Redis Caching & Session Management
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Nhiều API calls tốn thời gian (AI generation, analytics, search) → cần caching để giảm latency. Rate limiting cần distributed counter → Redis |
+| **Kiến trúc** | Request → Redis Cache Check (hit → return cached) → miss → Process → Store in Redis (TTL) → Return. Cache invalidation: write-through (update cache on write) + TTL-based expiry |
+| **Thách thức kỹ thuật** | Cache invalidation strategy (khi content thay đổi, invalidate related caches), distributed rate limiting (multiple server instances), session management (JWT blacklist for logout), memory management (eviction policies) |
+| **Công nghệ** | Redis 7.x, ioredis (Node.js client), express-rate-limit + rate-limit-redis, connect-redis (session store) |
+
+### 7.6 Background Job Processing (BullMQ)
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| **Vấn đề giải quyết** | Fine-tuning, embedding generation, analytics, email sending là long-running tasks → không thể chạy synchronous trong API request → cần background job queue |
+| **Kiến trúc** | API Request → Add Job to Queue (BullMQ + Redis) → Worker Process → Job Completion → Notify via Email. Queues: `embedding-queue`, `analytics-queue`, `fine-tune-queue`, `email-queue`, `search-sync-queue` |
+| **Thách thức kỹ thuật** | Job retry logic (exponential backoff), dead letter queue (failed jobs), job prioritization, concurrency control, job progress tracking, horizontal scaling workers |
+| **Công nghệ** | BullMQ, Redis (as message broker), Bull Board (monitoring dashboard) |
+
+### 7.7 CI/CD Pipeline (GitHub Actions)
 
 | Khía cạnh | Chi tiết |
 |-----------|----------|
