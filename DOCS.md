@@ -225,13 +225,14 @@ server/
 + Chọn model (GPT-4 / Llama / fine-tuned), tone, ngôn ngữ, temperature
 + Streaming real-time (SSE) từ AI về client
 + CRUD nội dung, yêu thích, gắn tag, lịch sử phiên bản, xuất PDF/Word
++ Redis caching cho API responses (giảm latency khi truy vấn nội dung)
 + API: `/api/content/*`
 + DB: Contents, UsageLogs
 
 ### Module 3 – Fine-tuning Model AI
 
 + Upload dataset (CSV/JSON) → Multer → Cloudinary
-+ Tạo job fine-tuning (OpenAI API hoặc Llama local)
++ Tạo job fine-tuning (OpenAI API hoặc Llama local) → BullMQ background job xử lý training
 + Theo dõi trạng thái: pending → training → completed/failed
 + Sử dụng model đã fine-tune khi sinh nội dung
 + API: `/api/fine-tune/*`
@@ -261,6 +262,7 @@ server/
 ### Module 7 – Thông Báo
 
 + Thông báo hệ thống, thanh toán, fine-tuning, tài khoản
++ Gửi email thông báo qua BullMQ email queue (background processing)
 + Đánh dấu đã đọc / đọc tất cả
 + API: `/api/notifications/*`
 + DB: Notifications
@@ -279,6 +281,7 @@ server/
 
 + Dashboard: tổng user, nội dung, doanh thu, biểu đồ tăng trưởng
 + Quản lý: user, nội dung, template, danh mục, gói dịch vụ, thanh toán, model AI
++ Bull Board: monitoring dashboard cho BullMQ background jobs
 + Cài đặt hệ thống, nhật ký audit log
 + API: `/api/admin/*`
 + DB: SystemSettings, AuditLogs
