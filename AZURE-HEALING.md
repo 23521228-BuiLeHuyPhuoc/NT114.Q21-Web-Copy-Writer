@@ -786,33 +786,153 @@ az network lb rule create \
 
 ## 9. Kịch Bản Thực Hành (Lab Scenarios)
 
+### 9.0 Yêu cầu chung – Chuẩn bị môi trường
+
+> ⚠️ **Quan trọng:** Tất cả 4 kịch bản bên dưới đều yêu cầu hoàn thành các bước chuẩn bị này trước. Hãy thực hiện **một lần duy nhất** trước khi bắt đầu bất kỳ kịch bản nào.
+
+**Bước 0.1 – Đăng ký tài khoản Azure**
+
+- Truy cập https://azure.microsoft.com/en-us/free/students/ (Azure for Students – miễn phí $100 credit) hoặc https://azure.microsoft.com/en-us/free/ (Free Trial – $200 credit trong 30 ngày).
+- Đăng ký bằng email trường (.edu) hoặc tài khoản Microsoft cá nhân.
+- Sau khi đăng ký xong, đăng nhập vào https://portal.azure.com và xác nhận thấy subscription đang active.
+
+**Bước 0.2 – Cài đặt Azure CLI trên máy local**
+
+```bash
+# Trên Ubuntu/Debian
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+# Trên macOS (dùng Homebrew)
+brew update && brew install azure-cli
+
+# Trên Windows (tải installer)
+# Tải từ: https://aka.ms/installazurecliwindows
+# Hoặc dùng winget:
+winget install -e --id Microsoft.AzureCLI
+```
+
+Xác nhận cài đặt thành công:
+
+```bash
+az --version
+# Kết quả mong đợi: azure-cli 2.x.x (hoặc mới hơn)
+```
+
+**Bước 0.3 – Đăng nhập Azure CLI**
+
+```bash
+az login
+# Trình duyệt sẽ mở ra → đăng nhập bằng tài khoản Azure → quay lại terminal thấy thông tin subscription.
+```
+
+Xác nhận subscription:
+
+```bash
+az account show --query "{name:name, id:id, state:state}" -o table
+# Kết quả mong đợi:
+# Name                  Id                                    State
+# --------------------  ------------------------------------  -------
+# Azure for Students    xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  Enabled
+```
+
+**Bước 0.4 – Cài đặt các công cụ bổ sung**
+
+```bash
+# Cài kubectl (cần cho kịch bản 2 - AKS)
+az aks install-cli
+
+# Cài Git (nếu chưa có)
+# Ubuntu: sudo apt install git
+# macOS: brew install git
+# Windows: https://git-scm.com/downloads
+
+# Cài Node.js 18 LTS (cần cho kịch bản 1 và 4)
+# Ubuntu: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt install -y nodejs
+# macOS: brew install node@18
+# Windows: https://nodejs.org/
+```
+
+Xác nhận:
+
+```bash
+kubectl version --client 2>/dev/null && echo "✅ kubectl OK" || echo "❌ kubectl chưa cài"
+git --version && echo "✅ git OK"
+node --version && echo "✅ node OK"
+```
+
+**Bước 0.5 – Tạo Resource Group dùng chung cho tất cả kịch bản**
+
+```bash
+az group create --name RG-Healing-Lab --location southeastasia
+```
+
+Xác nhận:
+
+```bash
+az group show --name RG-Healing-Lab --query "{name:name, location:location, provisioningState:properties.provisioningState}" -o table
+# Kết quả mong đợi:
+# Name             Location       ProvisioningState
+# ---------------  -------------  -------------------
+# RG-Healing-Lab   southeastasia  Succeeded
+```
+
+**Bước 0.6 – Tạo thư mục làm việc trên máy local**
+
+```bash
+mkdir -p ~/azure-healing-lab
+cd ~/azure-healing-lab
+```
+
+> ✅ Sau khi hoàn thành 6 bước trên, bạn đã sẵn sàng thực hiện bất kỳ kịch bản nào bên dưới.
+
+---
+
 ### 9.1 Kịch bản 1: App Service Auto-Healing – Xử lý Memory Leak
 
-**Mục tiêu:** Demo khả năng tự phục hồi khi ứng dụng bị memory leak
+**Mục tiêu:** Demo khả năng tự phục hồi khi ứng dụng web bị memory leak – App Service tự động restart process khi phát hiện memory vượt ngưỡng.
 
-**Các bước thực hiện:**
+**Thời gian ước tính:** 30–45 phút
 
-| Bước | Hành động | Chi tiết |
-|------|-----------|----------|
-| 1 | Tạo Resource Group | `az group create --name RG-Healing-Lab --location southeastasia` |
-| 2 | Tạo App Service Plan | `az appservice plan create --name ASP-Lab --resource-group RG-Healing-Lab --sku S1` |
-| 3 | Tạo Web App | `az webapp create --name my-healing-app --resource-group RG-Healing-Lab --plan ASP-Lab --runtime "NODE:18-lts"` |
-| 4 | Deploy ứng dụng mẫu | Deploy Node.js app có endpoint `/leak` gây memory leak |
-| 5 | Cấu hình Auto-Healing | Trigger: memory > 500MB → Action: Recycle |
-| 6 | Gây sự cố | Gọi endpoint `/leak` nhiều lần để tăng memory |
-| 7 | Quan sát | Theo dõi App Service logs → thấy auto-restart |
-| 8 | Xác nhận | Ứng dụng tự khôi phục, memory trở về bình thường |
+**Chi phí ước tính:** ~$0.10/giờ (App Service Plan S1)
 
-**Ứng dụng mẫu (Node.js):**
+---
 
-```javascript
-// app.js - Ứng dụng demo memory leak
+#### Bước 1.1 – Tạo thư mục dự án và khởi tạo ứng dụng Node.js
+
+```bash
+cd ~/azure-healing-lab
+mkdir -p scenario1-appservice && cd scenario1-appservice
+```
+
+Tạo file `package.json`:
+
+```bash
+cat > package.json << 'EOF'
+{
+  "name": "healing-demo-app",
+  "version": "1.0.0",
+  "description": "Demo app for Azure App Service Auto-Healing (memory leak)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+EOF
+```
+
+Tạo file `app.js`:
+
+```bash
+cat > app.js << 'APPEOF'
 const express = require('express');
 const app = express();
 
 let memoryLeak = [];
 
-// Endpoint bình thường
+// Endpoint bình thường – hiển thị trạng thái
 app.get('/', (req, res) => {
   res.json({
     status: 'healthy',
@@ -833,7 +953,6 @@ app.get('/health', (req, res) => {
 
 // Endpoint gây memory leak (CHỈ DÙNG CHO DEMO)
 app.get('/leak', (req, res) => {
-  // Thêm 10MB vào memory mỗi lần gọi
   for (let i = 0; i < 100000; i++) {
     memoryLeak.push(new Array(100).fill('leak-data-' + Date.now()));
   }
@@ -849,35 +968,365 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+APPEOF
 ```
+
+Xác nhận file đã tạo:
+
+```bash
+ls -la
+# Kết quả mong đợi: app.js  package.json
+```
+
+#### Bước 1.2 – Cài dependencies và test ứng dụng trên local
+
+```bash
+npm install
+```
+
+Chạy thử local:
+
+```bash
+node app.js &
+# Kết quả mong đợi: Server running on port 8080
+
+curl http://localhost:8080/
+# Kết quả mong đợi: {"status":"healthy","memory":"XX MB","timestamp":"..."}
+
+curl http://localhost:8080/health
+# Kết quả mong đợi: {"status":"healthy","memory":"XX MB"}
+
+# Dừng server local
+kill %1
+```
+
+#### Bước 1.3 – Tạo App Service Plan (tier S1 trở lên để hỗ trợ Auto-Healing)
+
+```bash
+az appservice plan create \
+  --name ASP-Healing-Lab \
+  --resource-group RG-Healing-Lab \
+  --location southeastasia \
+  --sku S1 \
+  --is-linux
+```
+
+Xác nhận:
+
+```bash
+az appservice plan show \
+  --name ASP-Healing-Lab \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, sku:sku.name, status:status}" -o table
+# Kết quả mong đợi:
+# Name              Sku    Status
+# ----------------  -----  --------
+# ASP-Healing-Lab   S1     Ready
+```
+
+> ⚠️ **Lưu ý:** Auto-Healing yêu cầu tối thiểu tier **Basic (B1)** trở lên. Tier Free (F1) và Shared (D1) **không hỗ trợ** Auto-Healing.
+
+#### Bước 1.4 – Tạo Web App trên App Service
+
+```bash
+# Tạo tên webapp duy nhất (thêm random suffix để tránh trùng)
+WEBAPP_NAME="healing-app-$(date +%s | tail -c 6)"
+echo "Tên webapp: $WEBAPP_NAME"
+
+az webapp create \
+  --name $WEBAPP_NAME \
+  --resource-group RG-Healing-Lab \
+  --plan ASP-Healing-Lab \
+  --runtime "NODE:18-lts"
+```
+
+Xác nhận webapp đã tạo và đang chạy:
+
+```bash
+az webapp show \
+  --name $WEBAPP_NAME \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, state:state, defaultHostName:defaultHostName}" -o table
+# Kết quả mong đợi:
+# Name              State    DefaultHostName
+# ----------------  -------  ---------------------------------
+# healing-app-xxxxx Running  healing-app-xxxxx.azurewebsites.net
+```
+
+Truy cập thử (sẽ thấy trang mặc định):
+
+```bash
+curl https://$WEBAPP_NAME.azurewebsites.net
+```
+
+#### Bước 1.5 – Deploy ứng dụng lên App Service bằng Zip Deploy
+
+```bash
+# Đảm bảo đang ở thư mục dự án
+cd ~/azure-healing-lab/scenario1-appservice
+
+# Tạo file zip chứa code (bao gồm node_modules)
+zip -r deploy.zip . -x ".git/*"
+
+# Deploy lên App Service
+az webapp deploy \
+  --resource-group RG-Healing-Lab \
+  --name $WEBAPP_NAME \
+  --src-path deploy.zip \
+  --type zip
+```
+
+Chờ 30–60 giây cho deployment hoàn tất, rồi xác nhận:
+
+```bash
+# Test endpoint chính
+curl https://$WEBAPP_NAME.azurewebsites.net/
+# Kết quả mong đợi: {"status":"healthy","memory":"XX MB","timestamp":"..."}
+
+# Test health endpoint
+curl https://$WEBAPP_NAME.azurewebsites.net/health
+# Kết quả mong đợi: {"status":"healthy","memory":"XX MB"}
+```
+
+> Nếu thấy lỗi hoặc trang mặc định, chờ thêm 1–2 phút rồi thử lại. Kiểm tra logs:
+> ```bash
+> az webapp log tail --name $WEBAPP_NAME --resource-group RG-Healing-Lab
+> ```
+
+#### Bước 1.6 – Bật Auto-Healing trên App Service
+
+```bash
+# Bật tính năng auto-healing
+az webapp config set \
+  --resource-group RG-Healing-Lab \
+  --name $WEBAPP_NAME \
+  --auto-heal-enabled true
+```
+
+#### Bước 1.7 – Cấu hình Auto-Healing rules (trigger + action)
+
+**Cách 1: Qua Azure Portal (trực quan, phù hợp demo)**
+
+1. Truy cập https://portal.azure.com
+2. Tìm App Service vừa tạo (`healing-app-xxxxx`) → Click vào
+3. Menu bên trái → **Diagnose and solve problems**
+4. Gõ "Auto-Healing" vào ô tìm kiếm → Click **Auto-Healing**
+5. Chọn tab **Custom Auto-Healing Rules** → Bật **ON**
+6. Trong phần **Conditions (Triggers)**, click **+ Add Rule**:
+   - Chọn **Memory Limit** → Đặt **Private Bytes (KB)**: `512000` (= 500MB)
+   - Hoặc chọn **Status Codes** → Status Code: `503`, Count: `5`, Time Interval: `00:01:00`
+7. Trong phần **Actions**:
+   - Chọn **Recycle** (khởi động lại process)
+   - Đặt **Minimum Process Execution Time**: `00:02:00` (chờ tối thiểu 2 phút giữa 2 lần restart)
+8. Click **Save**
+9. Chụp screenshot cấu hình để đưa vào báo cáo
+
+**Cách 2: Qua Azure CLI (tự động, phù hợp script)**
+
+```bash
+az resource update \
+  --resource-group RG-Healing-Lab \
+  --name $WEBAPP_NAME \
+  --resource-type "Microsoft.Web/sites" \
+  --set properties.siteConfig.autoHealEnabled=true \
+  --set properties.siteConfig.autoHealRules='{"triggers":{"privateBytesInKB":512000,"statusCodes":[{"status":503,"subStatus":0,"win32Status":0,"count":5,"timeInterval":"00:01:00"}]},"actions":{"actionType":"Recycle","minProcessExecutionTime":"00:02:00"}}'
+```
+
+Xác nhận auto-healing đã bật:
+
+```bash
+az webapp config show \
+  --name $WEBAPP_NAME \
+  --resource-group RG-Healing-Lab \
+  --query "autoHealEnabled"
+# Kết quả mong đợi: true
+```
+
+#### Bước 1.8 – Bật Application Logging để theo dõi
+
+```bash
+# Bật logging filesystem
+az webapp log config \
+  --name $WEBAPP_NAME \
+  --resource-group RG-Healing-Lab \
+  --application-logging filesystem \
+  --level information \
+  --web-server-logging filesystem
+
+# Mở log stream trong 1 terminal riêng (để theo dõi real-time)
+az webapp log tail --name $WEBAPP_NAME --resource-group RG-Healing-Lab
+```
+
+> 💡 **Tip:** Mở 2 terminal – 1 terminal chạy `az webapp log tail` để theo dõi logs, terminal kia để gọi API gây sự cố.
+
+#### Bước 1.9 – Ghi nhận trạng thái ban đầu (Baseline)
+
+```bash
+echo "=== TRẠNG THÁI BAN ĐẦU ==="
+echo "Thời gian: $(date)"
+curl -s https://$WEBAPP_NAME.azurewebsites.net/ | python3 -m json.tool
+echo ""
+echo "Health check:"
+curl -s https://$WEBAPP_NAME.azurewebsites.net/health | python3 -m json.tool
+```
+
+> Chụp screenshot kết quả này cho báo cáo – đây là trạng thái "trước sự cố".
+
+#### Bước 1.10 – Gây sự cố: Tạo memory leak
+
+```bash
+echo "=== BẮT ĐẦU GÂY SỰ CỐ MEMORY LEAK ==="
+
+# Gọi /leak 20 lần liên tiếp, mỗi lần tăng ~10MB memory
+for i in $(seq 1 20); do
+  echo "--- Lần gọi $i ---"
+  curl -s https://$WEBAPP_NAME.azurewebsites.net/leak | python3 -m json.tool
+  sleep 2
+done
+
+echo ""
+echo "=== KIỂM TRA TRẠNG THÁI SAU KHI GÂY LEAK ==="
+curl -s https://$WEBAPP_NAME.azurewebsites.net/ | python3 -m json.tool
+curl -s https://$WEBAPP_NAME.azurewebsites.net/health | python3 -m json.tool
+```
+
+> Quan sát terminal log tail – bạn sẽ thấy memory tăng dần qua từng lần gọi.
+
+#### Bước 1.11 – Quan sát quá trình Auto-Healing
+
+Trong terminal chạy `az webapp log tail`, quan sát các dòng log:
+- Khi memory vượt ngưỡng 500MB → Auto-Heal engine kích hoạt
+- Bạn sẽ thấy log dạng: `Auto Heal triggered` hoặc `Worker process recycled`
+- Process w3wp sẽ bị kill và khởi tạo lại
+
+Nếu dùng Azure Portal:
+1. Vào App Service → **Diagnose and solve problems**
+2. Tìm **Auto-Healing** → Xem tab **Detector Insights**
+3. Sẽ thấy lịch sử các lần auto-heal đã xảy ra
+4. Chụp screenshot cho báo cáo
+
+```bash
+# Kiểm tra lại trạng thái sau khi auto-heal (chờ 1–2 phút sau khi heal)
+sleep 120
+
+echo "=== TRẠNG THÁI SAU AUTO-HEALING ==="
+echo "Thời gian: $(date)"
+curl -s https://$WEBAPP_NAME.azurewebsites.net/ | python3 -m json.tool
+curl -s https://$WEBAPP_NAME.azurewebsites.net/health | python3 -m json.tool
+```
+
+> Kết quả mong đợi: Memory trở về mức thấp (vài MB) vì process đã được restart → memoryLeak array bị reset.
+
+#### Bước 1.12 – Ghi nhận kết quả và chụp screenshot
+
+1. **So sánh trước/sau:** Memory trước leak (thấp) → Sau leak (cao) → Sau auto-heal (thấp lại)
+2. **Screenshot Azure Portal:** Mục Diagnose and solve problems → Auto-Healing history
+3. **Screenshot logs:** Dòng log ghi nhận auto-heal trigger
+4. **Ghi note:** Thời gian từ lúc memory vượt ngưỡng → auto-heal kích hoạt → app khôi phục
+
+#### Bước 1.13 – Dọn dẹp tài nguyên kịch bản 1
+
+```bash
+# Xóa Web App
+az webapp delete --name $WEBAPP_NAME --resource-group RG-Healing-Lab
+
+# Xóa App Service Plan
+az appservice plan delete --name ASP-Healing-Lab --resource-group RG-Healing-Lab --yes
+
+# Xác nhận đã xóa
+az webapp list --resource-group RG-Healing-Lab --query "[].name" -o table
+# Kết quả mong đợi: (trống, không còn webapp nào)
+```
+
+> ⚠️ **Quan trọng:** Luôn dọn dẹp tài nguyên sau khi demo xong để tránh phát sinh chi phí.
 
 ---
 
 ### 9.2 Kịch bản 2: AKS Self-Healing Pods
 
-**Mục tiêu:** Demo Kubernetes tự restart pod khi container crash
+**Mục tiêu:** Demo Kubernetes (trên AKS) tự động restart pod khi container crash, và tự tạo pod mới khi pod bị xóa – nhờ ReplicaSet đảm bảo luôn có đủ số replica mong muốn.
 
-**Các bước thực hiện:**
+**Thời gian ước tính:** 40–60 phút (AKS cluster mất ~10 phút để tạo)
 
-| Bước | Hành động | Chi tiết |
-|------|-----------|----------|
-| 1 | Tạo AKS Cluster | `az aks create --name AKS-Lab --resource-group RG-Healing-Lab --node-count 2` |
-| 2 | Kết nối kubectl | `az aks get-credentials --name AKS-Lab --resource-group RG-Healing-Lab` |
-| 3 | Deploy ứng dụng | `kubectl apply -f deployment.yaml` (3 replicas, có liveness probe) |
-| 4 | Kiểm tra pods | `kubectl get pods -w` (watch mode) |
-| 5 | Gây sự cố pod | `kubectl exec <pod> -- kill 1` (kill process trong container) |
-| 6 | Quan sát | Pod tự restart, RESTARTS count tăng lên |
-| 7 | Gây sự cố node | Cordon + drain node → pods được reschedule sang node khác |
-| 8 | Xác nhận | `kubectl get pods -o wide` → pods chạy trên node mới |
+**Chi phí ước tính:** ~$0.10/giờ (Standard_B2s × 2 nodes)
 
-**Deployment YAML:**
+---
 
-```yaml
-# deployment-healing-demo.yaml
+#### Bước 2.1 – Đăng ký resource providers cần thiết
+
+```bash
+# Đăng ký Microsoft.ContainerService (nếu chưa có)
+az provider register --namespace Microsoft.ContainerService
+
+# Kiểm tra trạng thái đăng ký
+az provider show --namespace Microsoft.ContainerService --query "registrationState" -o tsv
+# Kết quả mong đợi: Registered
+```
+
+> Nếu kết quả là "Registering", chờ 1–2 phút rồi kiểm tra lại.
+
+#### Bước 2.2 – Tạo AKS Cluster
+
+```bash
+az aks create \
+  --resource-group RG-Healing-Lab \
+  --name AKS-Healing-Lab \
+  --node-count 2 \
+  --node-vm-size Standard_B2s \
+  --generate-ssh-keys \
+  --location southeastasia
+```
+
+> ⏱️ **Chờ 8–12 phút** cho cluster được tạo xong. Bạn sẽ thấy JSON output khi hoàn tất.
+
+Xác nhận cluster đã tạo thành công:
+
+```bash
+az aks show \
+  --resource-group RG-Healing-Lab \
+  --name AKS-Healing-Lab \
+  --query "{name:name, provisioningState:provisioningState, nodeCount:agentPoolProfiles[0].count}" -o table
+# Kết quả mong đợi:
+# Name              ProvisioningState    NodeCount
+# ----------------  -------------------  ----------
+# AKS-Healing-Lab   Succeeded            2
+```
+
+#### Bước 2.3 – Kết nối kubectl đến AKS Cluster
+
+```bash
+az aks get-credentials \
+  --resource-group RG-Healing-Lab \
+  --name AKS-Healing-Lab \
+  --overwrite-existing
+```
+
+Xác nhận kết nối:
+
+```bash
+kubectl cluster-info
+# Kết quả mong đợi: Kubernetes control plane is running at https://...
+
+kubectl get nodes
+# Kết quả mong đợi: 2 nodes ở trạng thái Ready
+# NAME                                STATUS   ROLES   AGE   VERSION
+# aks-nodepool1-xxxxx-vmss000000      Ready    agent   5m    v1.xx.x
+# aks-nodepool1-xxxxx-vmss000001      Ready    agent   5m    v1.xx.x
+```
+
+#### Bước 2.4 – Tạo file Deployment YAML với Probes
+
+```bash
+cd ~/azure-healing-lab
+mkdir -p scenario2-aks && cd scenario2-aks
+
+cat > deployment-healing-demo.yaml << 'EOF'
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: healing-demo
+  labels:
+    app: healing-demo
 spec:
   replicas: 3
   selector:
@@ -900,12 +1349,21 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 5
           failureThreshold: 3
+          timeoutSeconds: 3
         readinessProbe:
           httpGet:
             path: /
             port: 80
           initialDelaySeconds: 3
           periodSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
 ---
 apiVersion: v1
 kind: Service
@@ -918,161 +1376,1211 @@ spec:
   - port: 80
     targetPort: 80
   type: LoadBalancer
+EOF
 ```
 
-**Script demo:**
+Xác nhận file đã tạo:
 
 ```bash
-#!/bin/bash
-# demo-aks-healing.sh
+cat deployment-healing-demo.yaml | head -5
+# Kết quả mong đợi: apiVersion: apps/v1 ...
+```
 
-echo "=== KỊCH BẢN 2: AKS Self-Healing Demo ==="
+#### Bước 2.5 – Deploy ứng dụng lên AKS Cluster
+
+```bash
+kubectl apply -f deployment-healing-demo.yaml
+# Kết quả mong đợi:
+# deployment.apps/healing-demo created
+# service/healing-demo-svc created
+```
+
+Chờ pods khởi động xong:
+
+```bash
+kubectl rollout status deployment/healing-demo --timeout=120s
+# Kết quả mong đợi: deployment "healing-demo" successfully rolled out
+```
+
+#### Bước 2.6 – Xác nhận pods và service đang chạy
+
+```bash
+echo "=== PODS ==="
+kubectl get pods -l app=healing-demo -o wide
+# Kết quả mong đợi: 3 pods ở trạng thái Running, READY 1/1
+
+echo ""
+echo "=== SERVICE ==="
+kubectl get svc healing-demo-svc
+# Kết quả mong đợi: Service type LoadBalancer với EXTERNAL-IP (chờ 1–2 phút nếu thấy <pending>)
+
+echo ""
+echo "=== DEPLOYMENT ==="
+kubectl get deployment healing-demo
+# Kết quả mong đợi: READY 3/3, UP-TO-DATE 3, AVAILABLE 3
+```
+
+Nếu Service EXTERNAL-IP vẫn `<pending>`, chờ và kiểm tra lại:
+
+```bash
+kubectl get svc healing-demo-svc --watch
+# Chờ cho đến khi thấy IP address, rồi Ctrl+C
+```
+
+Test truy cập ứng dụng:
+
+```bash
+EXTERNAL_IP=$(kubectl get svc healing-demo-svc -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo "External IP: $EXTERNAL_IP"
+curl http://$EXTERNAL_IP
+# Kết quả mong đợi: HTML page mặc định của nginx (Welcome to nginx!)
+```
+
+#### Bước 2.7 – Ghi nhận trạng thái ban đầu (Baseline)
+
+```bash
+echo "=== TRẠNG THÁI BAN ĐẦU ==="
+echo "Thời gian: $(date)"
 echo ""
 
-# Bước 1: Kiểm tra pods ban đầu
-echo "📋 Bước 1: Kiểm tra pods ban đầu"
-kubectl get pods -o wide
+echo "--- Pods ---"
+kubectl get pods -l app=healing-demo -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,RESTARTS:.status.containerStatuses[0].restartCount,NODE:.spec.nodeName,IP:.status.podIP"
 echo ""
 
-# Bước 2: Gây crash cho 1 pod
-echo "💥 Bước 2: Gây crash cho pod đầu tiên..."
+echo "--- Nodes ---"
+kubectl get nodes -o custom-columns="NAME:.metadata.name,STATUS:.status.conditions[-1].type,PODS:.status.allocatable.pods"
+```
+
+> 📸 Chụp screenshot kết quả này – trạng thái "trước sự cố" với 3 pods Running, 0 RESTARTS.
+
+#### Bước 2.8 – Demo A: Kill process trong container → Pod tự restart
+
+```bash
+echo "=== DEMO A: Kill process trong pod ==="
+echo ""
+
+# Lấy tên pod đầu tiên
 POD_NAME=$(kubectl get pods -l app=healing-demo -o jsonpath='{.items[0].metadata.name}')
-echo "Pod bị crash: $POD_NAME"
+echo "🎯 Pod sẽ bị kill: $POD_NAME"
+echo ""
+
+# Ghi nhận trạng thái trước khi kill
+echo "📋 Trước khi kill:"
+kubectl get pods -l app=healing-demo
+echo ""
+
+# Kill PID 1 (process chính) trong container → container crash
+echo "💥 Đang kill process..."
 kubectl exec $POD_NAME -- kill 1
 echo ""
 
-# Bước 3: Quan sát quá trình self-healing
-echo "🔄 Bước 3: Quan sát self-healing (30 giây)..."
+# Chờ 5 giây rồi kiểm tra
+echo "⏳ Chờ 5 giây..."
 sleep 5
-kubectl get pods -o wide
+
+echo "🔄 Sau khi kill (5 giây):"
+kubectl get pods -l app=healing-demo
 echo ""
 
-# Bước 4: Chờ pod recover
-echo "⏳ Bước 4: Chờ pod phục hồi..."
-sleep 25
-kubectl get pods -o wide
+# Chờ thêm 15 giây cho pod phục hồi hoàn toàn
+echo "⏳ Chờ thêm 15 giây cho pod phục hồi..."
+sleep 15
+
+echo "✅ Sau khi phục hồi (20 giây):"
+kubectl get pods -l app=healing-demo -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,RESTARTS:.status.containerStatuses[0].restartCount,READY:.status.containerStatuses[0].ready"
+```
+
+> **Kết quả mong đợi:** Pod bị kill sẽ chuyển qua trạng thái `Error` hoặc `CrashLoopBackOff` → rồi tự restart → RESTARTS count tăng từ 0 lên 1 → STATUS trở lại `Running`.
+
+> 📸 Chụp screenshot – đây là bằng chứng self-healing ở cấp container.
+
+#### Bước 2.9 – Demo B: Xóa pod → ReplicaSet tạo pod mới
+
+```bash
+echo "=== DEMO B: Xóa pod → ReplicaSet tự tạo lại ==="
 echo ""
 
-# Bước 5: Kiểm tra restart count
-echo "📊 Bước 5: Kiểm tra restart count"
-kubectl get pods -l app=healing-demo -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.containerStatuses[0].restartCount}{"\n"}{end}'
+# Lấy tên pod thứ hai
+POD_TO_DELETE=$(kubectl get pods -l app=healing-demo -o jsonpath='{.items[1].metadata.name}')
+echo "🎯 Pod sẽ bị xóa: $POD_TO_DELETE"
 echo ""
 
-echo "✅ Demo hoàn thành! Pod đã tự phục hồi."
+echo "📋 Trước khi xóa (3 pods):"
+kubectl get pods -l app=healing-demo
+echo ""
+
+# Xóa pod
+echo "🗑️ Đang xóa pod..."
+kubectl delete pod $POD_TO_DELETE
+echo ""
+
+# Kiểm tra ngay lập tức
+echo "🔄 Ngay sau khi xóa:"
+kubectl get pods -l app=healing-demo
+echo ""
+
+# Chờ pod mới khởi động
+echo "⏳ Chờ 20 giây cho pod mới khởi động..."
+sleep 20
+
+echo "✅ Sau khi phục hồi:"
+kubectl get pods -l app=healing-demo -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,RESTARTS:.status.containerStatuses[0].restartCount,AGE:.metadata.creationTimestamp"
+```
+
+> **Kết quả mong đợi:** Pod bị xóa biến mất → ReplicaSet phát hiện chỉ còn 2 pods (desired = 3) → tự tạo pod mới → lại đủ 3 pods Running.
+
+> 📸 Chụp screenshot – bằng chứng ReplicaSet self-healing.
+
+#### Bước 2.10 – Demo C: Drain node → Pods reschedule sang node khác
+
+```bash
+echo "=== DEMO C: Drain node → Pods được reschedule ==="
+echo ""
+
+# Xem pods đang chạy trên node nào
+echo "📋 Phân bố pods trên nodes:"
+kubectl get pods -l app=healing-demo -o custom-columns="POD:.metadata.name,NODE:.spec.nodeName,STATUS:.status.phase"
+echo ""
+
+# Lấy node có nhiều pods nhất
+TARGET_NODE=$(kubectl get pods -l app=healing-demo -o jsonpath='{.items[0].spec.nodeName}')
+echo "🎯 Node sẽ bị drain: $TARGET_NODE"
+echo ""
+
+# Cordon node (ngăn schedule pods mới vào node này)
+echo "🚫 Cordon node..."
+kubectl cordon $TARGET_NODE
+kubectl get nodes
+echo ""
+
+# Drain node (di chuyển tất cả pods ra khỏi node)
+echo "💧 Drain node (evict pods)..."
+kubectl drain $TARGET_NODE --ignore-daemonsets --delete-emptydir-data --force --grace-period=30
+echo ""
+
+# Chờ pods được reschedule
+echo "⏳ Chờ 30 giây cho pods reschedule..."
+sleep 30
+
+echo "✅ Sau khi drain:"
+kubectl get pods -l app=healing-demo -o custom-columns="POD:.metadata.name,NODE:.spec.nodeName,STATUS:.status.phase"
+echo ""
+kubectl get nodes
+```
+
+> **Kết quả mong đợi:** Pods trên node bị drain sẽ bị evict → Kubernetes tạo pods mới trên node còn lại → tất cả 3 pods Running trên node healthy.
+
+> 📸 Chụp screenshot – bằng chứng pods tự di chuyển khi node bị drain.
+
+Khôi phục node:
+
+```bash
+# Uncordon node (cho phép schedule lại)
+echo "🔓 Uncordon node..."
+kubectl uncordon $TARGET_NODE
+kubectl get nodes
+# Kết quả mong đợi: Cả 2 nodes đều Ready (không còn SchedulingDisabled)
+```
+
+#### Bước 2.11 – Xem chi tiết events và mô tả pod (cho báo cáo)
+
+```bash
+echo "=== EVENTS (chứng minh self-healing) ==="
+kubectl get events --sort-by=.lastTimestamp --field-selector reason=Killing -A 2>/dev/null || true
+kubectl get events --sort-by=.lastTimestamp --field-selector reason=Started -A 2>/dev/null || true
+kubectl get events --sort-by=.lastTimestamp --field-selector reason=Created -A 2>/dev/null || true
+echo ""
+
+echo "=== MÔ TẢ POD (restart history) ==="
+POD_CHECK=$(kubectl get pods -l app=healing-demo -o jsonpath='{.items[0].metadata.name}')
+kubectl describe pod $POD_CHECK | grep -A 10 "Last State\|Restart Count\|Events"
+```
+
+> Copy kết quả events vào báo cáo – đây là log chứng minh Kubernetes tự phục hồi.
+
+#### Bước 2.12 – Dọn dẹp tài nguyên kịch bản 2
+
+```bash
+# Xóa deployment và service
+kubectl delete -f deployment-healing-demo.yaml
+# Kết quả mong đợi:
+# deployment.apps "healing-demo" deleted
+# service "healing-demo-svc" deleted
+
+# Xác nhận pods đã xóa
+kubectl get pods -l app=healing-demo
+# Kết quả mong đợi: No resources found
+
+# Xóa AKS cluster (tốn nhiều tài nguyên, nên xóa ngay khi xong)
+az aks delete \
+  --resource-group RG-Healing-Lab \
+  --name AKS-Healing-Lab \
+  --yes --no-wait
+
+echo "✅ Đã gửi lệnh xóa AKS cluster (sẽ mất 5-10 phút để xóa hoàn toàn)."
 ```
 
 ---
 
 ### 9.3 Kịch bản 3: VMSS Automatic Instance Repair
 
-**Mục tiêu:** Demo VMSS tự thay thế VM unhealthy
+**Mục tiêu:** Demo Virtual Machine Scale Set (VMSS) tự động phát hiện VM unhealthy và thay thế bằng VM mới – sử dụng Application Health Extension và Automatic Instance Repairs.
 
-**Các bước thực hiện:**
+**Thời gian ước tính:** 45–60 phút
 
-| Bước | Hành động | Chi tiết |
-|------|-----------|----------|
-| 1 | Tạo VMSS | Tạo scale set với 3 instances |
-| 2 | Cấu hình Health Extension | Cài Application Health Extension |
-| 3 | Bật Automatic Repairs | `--enable-automatic-repairs true` |
-| 4 | Kiểm tra trạng thái | Xác nhận 3 instances healthy |
-| 5 | Gây sự cố | Stop web server trên 1 instance → health check fail |
-| 6 | Quan sát | Instance chuyển sang Unhealthy → bị xóa → tạo mới |
-| 7 | Xác nhận | VMSS trở lại 3 instances healthy |
+**Chi phí ước tính:** ~$0.03/giờ (Standard_B1s × 3 instances)
+
+---
+
+#### Bước 3.1 – Tạo file cloud-init để cài web server tự động trên mỗi VM
 
 ```bash
-# Tạo VMSS với automatic repairs
+cd ~/azure-healing-lab
+mkdir -p scenario3-vmss && cd scenario3-vmss
+
+cat > cloud-init.yml << 'EOF'
+#cloud-config
+package_upgrade: true
+packages:
+  - nginx
+runcmd:
+  - |
+    # Tạo trang health check
+    echo '{"status":"healthy","hostname":"'$(hostname)'"}' > /var/www/html/health
+    # Tạo trang chính
+    echo '<h1>Hello from '$(hostname)'</h1><p>Status: healthy</p>' > /var/www/html/index.html
+    # Khởi động nginx
+    systemctl enable nginx
+    systemctl start nginx
+EOF
+```
+
+Xác nhận file:
+
+```bash
+cat cloud-init.yml
+```
+
+#### Bước 3.2 – Tạo Virtual Network và Subnet cho VMSS
+
+```bash
+az network vnet create \
+  --resource-group RG-Healing-Lab \
+  --name VNet-VMSS \
+  --address-prefix 10.0.0.0/16 \
+  --subnet-name Subnet-VMSS \
+  --subnet-prefix 10.0.1.0/24 \
+  --location southeastasia
+```
+
+Xác nhận:
+
+```bash
+az network vnet show \
+  --resource-group RG-Healing-Lab \
+  --name VNet-VMSS \
+  --query "{name:name, addressSpace:addressSpace.addressPrefixes[0], subnets:subnets[0].name}" -o table
+# Kết quả mong đợi:
+# Name       AddressSpace   Subnets
+# ---------  -------------  -----------
+# VNet-VMSS  10.0.0.0/16    Subnet-VMSS
+```
+
+#### Bước 3.3 – Tạo Public IP và Load Balancer
+
+```bash
+# Tạo Public IP
+az network public-ip create \
+  --resource-group RG-Healing-Lab \
+  --name PIP-VMSS \
+  --sku Standard \
+  --allocation-method Static \
+  --location southeastasia
+
+# Tạo Load Balancer
+az network lb create \
+  --resource-group RG-Healing-Lab \
+  --name LB-VMSS \
+  --sku Standard \
+  --frontend-ip-name FE-VMSS \
+  --backend-pool-name BE-VMSS \
+  --public-ip-address PIP-VMSS \
+  --location southeastasia
+```
+
+Xác nhận:
+
+```bash
+az network lb show \
+  --resource-group RG-Healing-Lab \
+  --name LB-VMSS \
+  --query "{name:name, frontendIP:frontendIPConfigurations[0].name, backendPool:backendAddressPools[0].name}" -o table
+```
+
+#### Bước 3.4 – Tạo Health Probe và Load Balancing Rule
+
+```bash
+# Tạo health probe (kiểm tra endpoint /health trên port 80)
+az network lb probe create \
+  --resource-group RG-Healing-Lab \
+  --lb-name LB-VMSS \
+  --name HealthProbe-HTTP \
+  --protocol Http \
+  --port 80 \
+  --path "/health" \
+  --interval 15 \
+  --threshold 2
+
+# Tạo load balancing rule
+az network lb rule create \
+  --resource-group RG-Healing-Lab \
+  --lb-name LB-VMSS \
+  --name LBRule-HTTP \
+  --protocol Tcp \
+  --frontend-port 80 \
+  --backend-port 80 \
+  --frontend-ip-name FE-VMSS \
+  --backend-pool-name BE-VMSS \
+  --probe-name HealthProbe-HTTP
+```
+
+Xác nhận probe:
+
+```bash
+az network lb probe show \
+  --resource-group RG-Healing-Lab \
+  --lb-name LB-VMSS \
+  --name HealthProbe-HTTP \
+  --query "{name:name, protocol:protocol, port:port, requestPath:requestPath, intervalInSeconds:intervalInSeconds}" -o table
+```
+
+#### Bước 3.5 – Tạo NSG (Network Security Group) cho phép HTTP và SSH
+
+```bash
+# Tạo NSG
+az network nsg create \
+  --resource-group RG-Healing-Lab \
+  --name NSG-VMSS \
+  --location southeastasia
+
+# Cho phép HTTP (port 80)
+az network nsg rule create \
+  --resource-group RG-Healing-Lab \
+  --nsg-name NSG-VMSS \
+  --name Allow-HTTP \
+  --priority 100 \
+  --access Allow \
+  --protocol Tcp \
+  --destination-port-ranges 80
+
+# Cho phép SSH (port 22) – cần để gây sự cố
+az network nsg rule create \
+  --resource-group RG-Healing-Lab \
+  --nsg-name NSG-VMSS \
+  --name Allow-SSH \
+  --priority 110 \
+  --access Allow \
+  --protocol Tcp \
+  --destination-port-ranges 22
+```
+
+#### Bước 3.6 – Tạo VMSS với 3 instances và cloud-init
+
+```bash
 az vmss create \
   --resource-group RG-Healing-Lab \
-  --name MyVMSS \
+  --name VMSS-Healing-Lab \
   --image Ubuntu2204 \
   --instance-count 3 \
   --vm-sku Standard_B1s \
   --admin-username azureuser \
   --generate-ssh-keys \
-  --custom-data cloud-init.yml
+  --vnet-name VNet-VMSS \
+  --subnet Subnet-VMSS \
+  --load-balancer LB-VMSS \
+  --backend-pool-name BE-VMSS \
+  --nsg NSG-VMSS \
+  --custom-data cloud-init.yml \
+  --upgrade-policy-mode Automatic \
+  --location southeastasia
+```
 
-# Cài Health Extension
+> ⏱️ **Chờ 3–5 phút** cho 3 VMs được tạo và cloud-init chạy xong.
+
+Xác nhận VMSS đã tạo:
+
+```bash
+az vmss show \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --query "{name:name, provisioningState:provisioningState, capacity:sku.capacity}" -o table
+# Kết quả mong đợi:
+# Name                ProvisioningState    Capacity
+# ------------------  -------------------  ---------
+# VMSS-Healing-Lab    Succeeded            3
+```
+
+Xem danh sách instances:
+
+```bash
+az vmss list-instances \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --query "[].{instanceId:instanceId, name:name, provisioningState:provisioningState}" -o table
+# Kết quả mong đợi: 3 instances, tất cả Succeeded
+```
+
+#### Bước 3.7 – Chờ cloud-init hoàn tất và test web server
+
+```bash
+# Chờ 2 phút cho cloud-init cài nginx
+echo "⏳ Chờ 2 phút cho cloud-init hoàn tất trên tất cả VMs..."
+sleep 120
+
+# Lấy Public IP của Load Balancer
+LB_IP=$(az network public-ip show \
+  --resource-group RG-Healing-Lab \
+  --name PIP-VMSS \
+  --query ipAddress -o tsv)
+echo "Load Balancer IP: $LB_IP"
+
+# Test truy cập qua Load Balancer
+curl http://$LB_IP/
+# Kết quả mong đợi: <h1>Hello from vmss-xxxxx</h1>
+
+curl http://$LB_IP/health
+# Kết quả mong đợi: {"status":"healthy","hostname":"vmss-xxxxx"}
+```
+
+> Nếu curl bị timeout, chờ thêm 1–2 phút cho cloud-init cài xong nginx.
+
+#### Bước 3.8 – Cài Application Health Extension cho VMSS
+
+```bash
 az vmss extension set \
   --resource-group RG-Healing-Lab \
-  --vmss-name MyVMSS \
+  --vmss-name VMSS-Healing-Lab \
   --name ApplicationHealthLinux \
   --publisher Microsoft.ManagedServices \
   --version 1.0 \
   --settings '{"protocol":"http","port":80,"requestPath":"/health"}'
+```
 
-# Bật Automatic Repairs
+Cập nhật tất cả instances:
+
+```bash
+az vmss update-instances \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --instance-ids "*"
+```
+
+> ⏱️ Chờ 2–3 phút cho extension cài đặt xong trên tất cả instances.
+
+Xác nhận health extension đã cài:
+
+```bash
+az vmss extension list \
+  --resource-group RG-Healing-Lab \
+  --vmss-name VMSS-Healing-Lab \
+  --query "[].{name:name, publisher:publisher, provisioningState:provisioningState}" -o table
+# Kết quả mong đợi:
+# Name                      Publisher                   ProvisioningState
+# ------------------------  --------------------------  -------------------
+# ApplicationHealthLinux     Microsoft.ManagedServices   Succeeded
+```
+
+#### Bước 3.9 – Bật Automatic Instance Repairs
+
+```bash
 az vmss update \
   --resource-group RG-Healing-Lab \
-  --name MyVMSS \
+  --name VMSS-Healing-Lab \
   --enable-automatic-repairs true \
   --automatic-repairs-grace-period 10
+```
+
+Xác nhận:
+
+```bash
+az vmss show \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --query "{automaticRepairsPolicy:automaticRepairsPolicy}" -o json
+# Kết quả mong đợi:
+# {
+#   "automaticRepairsPolicy": {
+#     "enabled": true,
+#     "gracePeriod": "PT10M"
+#   }
+# }
+```
+
+#### Bước 3.10 – Ghi nhận trạng thái ban đầu (Baseline)
+
+```bash
+echo "=== TRẠNG THÁI BAN ĐẦU VMSS ==="
+echo "Thời gian: $(date)"
+echo ""
+
+az vmss list-instances \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --query "[].{instanceId:instanceId, name:name, provisioningState:provisioningState}" -o table
+
+echo ""
+echo "Test health check từng instance (qua LB):"
+for i in $(seq 1 5); do
+  curl -s http://$LB_IP/health
+  echo ""
+done
+```
+
+> 📸 Chụp screenshot – trạng thái "trước sự cố" với 3 instances healthy.
+
+#### Bước 3.11 – Gây sự cố: Stop nginx trên 1 instance
+
+Để gây sự cố, ta cần SSH vào 1 instance và stop nginx. Đầu tiên, cần tạo NAT rule để SSH:
+
+```bash
+# Tạo Inbound NAT Rule cho SSH đến instance 0
+az network lb inbound-nat-rule create \
+  --resource-group RG-Healing-Lab \
+  --lb-name LB-VMSS \
+  --name SSH-to-Instance0 \
+  --protocol Tcp \
+  --frontend-port 50000 \
+  --backend-port 22 \
+  --frontend-ip-name FE-VMSS
+
+# Gắn NAT rule vào instance 0 NIC
+# (Lưu ý: Tùy cấu hình VMSS, có thể cần dùng Run Command thay thế)
+```
+
+**Cách thay thế (đơn giản hơn) – Dùng Run Command:**
+
+```bash
+# Lấy instance ID đầu tiên
+INSTANCE_ID=$(az vmss list-instances \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --query "[0].instanceId" -o tsv)
+echo "Instance sẽ bị gây sự cố: $INSTANCE_ID"
+
+# Stop nginx trên instance đó → health check sẽ fail
+az vmss run-command invoke \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --instance-id $INSTANCE_ID \
+  --command-id RunShellScript \
+  --scripts "sudo systemctl stop nginx && echo 'nginx stopped on instance $INSTANCE_ID'"
+```
+
+Xác nhận nginx đã stop:
+
+```bash
+az vmss run-command invoke \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --instance-id $INSTANCE_ID \
+  --command-id RunShellScript \
+  --scripts "systemctl is-active nginx || echo 'nginx is NOT running'"
+# Kết quả mong đợi: inactive hoặc nginx is NOT running
+```
+
+#### Bước 3.12 – Quan sát quá trình Automatic Instance Repair
+
+```bash
+echo "=== QUAN SÁT QUÁ TRÌNH REPAIR ==="
+echo "Health Extension sẽ phát hiện instance unhealthy sau 15–30 giây."
+echo "Sau grace period (10 phút), VMSS sẽ tự động thay thế instance."
+echo ""
+
+# Kiểm tra trạng thái health (mỗi 30 giây, trong 15 phút)
+for i in $(seq 1 30); do
+  echo "--- Kiểm tra lần $i ($(date +%H:%M:%S)) ---"
+  az vmss list-instances \
+    --resource-group RG-Healing-Lab \
+    --name VMSS-Healing-Lab \
+    --query "[].{id:instanceId, name:name, state:provisioningState}" -o table
+  echo ""
+  sleep 30
+done
+```
+
+> **Kết quả mong đợi (theo thời gian):**
+> - **0–30 giây:** Health Extension phát hiện instance unhealthy (nginx không phản hồi /health)
+> - **30 giây – 10 phút:** Grace period – chờ xem instance có tự phục hồi không
+> - **Sau 10 phút:** Automatic Repairs kích hoạt → xóa instance unhealthy → tạo instance mới
+> - **Thêm 3–5 phút:** Instance mới khởi động, cloud-init cài nginx → instance trở lại healthy
+
+> 📸 Chụp screenshot ở mỗi giai đoạn để làm bằng chứng cho báo cáo.
+
+Bạn cũng có thể theo dõi qua Azure Portal:
+1. Vào **Virtual Machine Scale Sets** → `VMSS-Healing-Lab`
+2. Tab **Instances** → Quan sát cột **Health State** thay đổi
+3. Tab **Activity Log** → Thấy events "Delete virtual machine" và "Create virtual machine"
+
+#### Bước 3.13 – Xác nhận phục hồi thành công
+
+```bash
+echo "=== XÁC NHẬN PHỤC HỒI ==="
+
+# Kiểm tra instances
+az vmss list-instances \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --query "[].{instanceId:instanceId, name:name, provisioningState:provisioningState}" -o table
+# Kết quả mong đợi: 3 instances, tất cả Succeeded
+
+# Test health check
+for i in $(seq 1 5); do
+  curl -s http://$LB_IP/health
+  echo ""
+done
+# Kết quả mong đợi: Tất cả trả về {"status":"healthy",...}
+
+echo ""
+echo "✅ VMSS đã tự phục hồi – instance unhealthy đã được thay thế bằng instance mới!"
+```
+
+#### Bước 3.14 – Dọn dẹp tài nguyên kịch bản 3
+
+```bash
+# Xóa VMSS
+az vmss delete \
+  --resource-group RG-Healing-Lab \
+  --name VMSS-Healing-Lab \
+  --yes
+
+# Xóa Load Balancer
+az network lb delete \
+  --resource-group RG-Healing-Lab \
+  --name LB-VMSS
+
+# Xóa Public IP
+az network public-ip delete \
+  --resource-group RG-Healing-Lab \
+  --name PIP-VMSS
+
+# Xóa NSG
+az network nsg delete \
+  --resource-group RG-Healing-Lab \
+  --name NSG-VMSS
+
+# Xóa VNet
+az network vnet delete \
+  --resource-group RG-Healing-Lab \
+  --name VNet-VMSS
+
+# Xác nhận
+az resource list --resource-group RG-Healing-Lab --query "[].{name:name, type:type}" -o table
+# Kết quả mong đợi: Không còn tài nguyên VMSS/LB/VNet
 ```
 
 ---
 
 ### 9.4 Kịch bản 4: Traffic Manager Failover
 
-**Mục tiêu:** Demo failover tự động giữa 2 regions
+**Mục tiêu:** Demo Azure Traffic Manager tự động chuyển traffic từ region primary (bị lỗi) sang region secondary – failover ở cấp DNS, không cần thay đổi code hay cấu hình client.
 
-**Các bước thực hiện:**
+**Thời gian ước tính:** 30–45 phút
 
-| Bước | Hành động | Chi tiết |
-|------|-----------|----------|
-| 1 | Tạo 2 Web Apps | 1 ở Southeast Asia (primary), 1 ở East Asia (secondary) |
-| 2 | Tạo Traffic Manager | Priority routing, monitor /health |
-| 3 | Test ban đầu | DNS resolve → primary endpoint |
-| 4 | Gây sự cố primary | Stop App Service primary |
-| 5 | Quan sát failover | Traffic Manager detect unhealthy → chuyển DNS sang secondary |
-| 6 | Phục hồi primary | Start lại primary App Service |
-| 7 | Xác nhận failback | Traffic Manager detect healthy → chuyển DNS về primary |
+**Chi phí ước tính:** ~$0.15/giờ (2 App Service Plans S1 + Traffic Manager)
+
+---
+
+#### Bước 4.1 – Tạo thư mục dự án và ứng dụng Node.js cho 2 regions
 
 ```bash
-# Bước 1: Tạo 2 App Services ở 2 regions
-az webapp create --name myapp-sea --resource-group RG-Healing-Lab \
-  --plan ASP-SEA --runtime "NODE:18-lts"
-az webapp create --name myapp-ea --resource-group RG-Healing-Lab \
-  --plan ASP-EA --runtime "NODE:18-lts"
+cd ~/azure-healing-lab
+mkdir -p scenario4-trafficmanager && cd scenario4-trafficmanager
 
-# Bước 2: Tạo Traffic Manager
+cat > package.json << 'EOF'
+{
+  "name": "failover-demo-app",
+  "version": "1.0.0",
+  "description": "Demo app for Traffic Manager failover",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+EOF
+
+cat > app.js << 'APPEOF'
+const express = require('express');
+const app = express();
+
+const REGION = process.env.REGION || 'unknown';
+
+app.get('/', (req, res) => {
+  res.json({
+    message: `Hello from ${REGION} region!`,
+    region: REGION,
+    hostname: require('os').hostname(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    region: REGION,
+    uptime: process.uptime()
+  });
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`[${REGION}] Server running on port ${PORT}`);
+});
+APPEOF
+
+npm install
+```
+
+Xác nhận:
+
+```bash
+ls -la
+# Kết quả mong đợi: app.js  node_modules  package.json  package-lock.json
+```
+
+#### Bước 4.2 – Tạo App Service Plan ở Region 1 (Southeast Asia – Primary)
+
+```bash
+az appservice plan create \
+  --name ASP-SEA-Primary \
+  --resource-group RG-Healing-Lab \
+  --location southeastasia \
+  --sku S1 \
+  --is-linux
+```
+
+Xác nhận:
+
+```bash
+az appservice plan show \
+  --name ASP-SEA-Primary \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, location:location, sku:sku.name}" -o table
+# Kết quả mong đợi:
+# Name              Location        Sku
+# ----------------  --------------  ----
+# ASP-SEA-Primary   southeastasia   S1
+```
+
+#### Bước 4.3 – Tạo App Service Plan ở Region 2 (East Asia – Secondary)
+
+```bash
+az appservice plan create \
+  --name ASP-EA-Secondary \
+  --resource-group RG-Healing-Lab \
+  --location eastasia \
+  --sku S1 \
+  --is-linux
+```
+
+Xác nhận:
+
+```bash
+az appservice plan show \
+  --name ASP-EA-Secondary \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, location:location, sku:sku.name}" -o table
+```
+
+#### Bước 4.4 – Tạo Web App ở Region 1 (Primary)
+
+```bash
+SUFFIX=$(date +%s | tail -c 6)
+APP_SEA="failover-sea-$SUFFIX"
+echo "Primary App: $APP_SEA"
+
+az webapp create \
+  --name $APP_SEA \
+  --resource-group RG-Healing-Lab \
+  --plan ASP-SEA-Primary \
+  --runtime "NODE:18-lts"
+
+# Đặt biến môi trường REGION
+az webapp config appsettings set \
+  --name $APP_SEA \
+  --resource-group RG-Healing-Lab \
+  --settings REGION="Southeast-Asia-PRIMARY"
+```
+
+Xác nhận:
+
+```bash
+az webapp show \
+  --name $APP_SEA \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, state:state, location:location, defaultHostName:defaultHostName}" -o table
+```
+
+#### Bước 4.5 – Tạo Web App ở Region 2 (Secondary)
+
+```bash
+APP_EA="failover-ea-$SUFFIX"
+echo "Secondary App: $APP_EA"
+
+az webapp create \
+  --name $APP_EA \
+  --resource-group RG-Healing-Lab \
+  --plan ASP-EA-Secondary \
+  --runtime "NODE:18-lts"
+
+# Đặt biến môi trường REGION
+az webapp config appsettings set \
+  --name $APP_EA \
+  --resource-group RG-Healing-Lab \
+  --settings REGION="East-Asia-SECONDARY"
+```
+
+#### Bước 4.6 – Deploy ứng dụng lên cả 2 Web Apps
+
+```bash
+# Tạo file zip
+cd ~/azure-healing-lab/scenario4-trafficmanager
+zip -r deploy.zip . -x ".git/*"
+
+# Deploy lên Primary (Southeast Asia)
+az webapp deploy \
+  --resource-group RG-Healing-Lab \
+  --name $APP_SEA \
+  --src-path deploy.zip \
+  --type zip
+
+# Deploy lên Secondary (East Asia)
+az webapp deploy \
+  --resource-group RG-Healing-Lab \
+  --name $APP_EA \
+  --src-path deploy.zip \
+  --type zip
+```
+
+Chờ 30–60 giây, rồi test cả 2 apps:
+
+```bash
+echo "=== Test Primary (SEA) ==="
+curl -s https://$APP_SEA.azurewebsites.net/ | python3 -m json.tool
+echo ""
+curl -s https://$APP_SEA.azurewebsites.net/health | python3 -m json.tool
+echo ""
+
+echo "=== Test Secondary (EA) ==="
+curl -s https://$APP_EA.azurewebsites.net/ | python3 -m json.tool
+echo ""
+curl -s https://$APP_EA.azurewebsites.net/health | python3 -m json.tool
+```
+
+> **Kết quả mong đợi:** Cả 2 apps đều trả về JSON với region tương ứng (Southeast-Asia-PRIMARY / East-Asia-SECONDARY).
+
+#### Bước 4.7 – Lấy Resource ID của 2 Web Apps
+
+```bash
+SEA_APP_ID=$(az webapp show \
+  --name $APP_SEA \
+  --resource-group RG-Healing-Lab \
+  --query "id" -o tsv)
+echo "SEA App ID: $SEA_APP_ID"
+
+EA_APP_ID=$(az webapp show \
+  --name $APP_EA \
+  --resource-group RG-Healing-Lab \
+  --query "id" -o tsv)
+echo "EA App ID: $EA_APP_ID"
+```
+
+#### Bước 4.8 – Tạo Traffic Manager Profile
+
+```bash
+TM_DNS="failover-demo-$SUFFIX"
+echo "Traffic Manager DNS: $TM_DNS.trafficmanager.net"
+
 az network traffic-manager profile create \
-  --name TM-Failover \
+  --name TM-Failover-Lab \
   --resource-group RG-Healing-Lab \
   --routing-method Priority \
-  --unique-dns-name myapp-failover-demo \
-  --monitor-path "/health" \
+  --unique-dns-name $TM_DNS \
   --monitor-protocol HTTPS \
-  --monitor-port 443
+  --monitor-port 443 \
+  --monitor-path "/health" \
+  --monitor-interval 10 \
+  --monitor-timeout 5 \
+  --monitor-tolerated-failures 2
+```
 
-# Bước 3: Thêm endpoints
+Xác nhận:
+
+```bash
+az network traffic-manager profile show \
+  --name TM-Failover-Lab \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, dnsName:dnsConfig.fqdn, routingMethod:trafficRoutingMethod, monitorPath:monitorConfig.path}" -o table
+# Kết quả mong đợi:
+# Name              DnsName                                  RoutingMethod  MonitorPath
+# ----------------  ---------------------------------------- -------------  -----------
+# TM-Failover-Lab   failover-demo-xxxxx.trafficmanager.net   Priority       /health
+```
+
+#### Bước 4.9 – Thêm Primary Endpoint (Southeast Asia, Priority 1)
+
+```bash
 az network traffic-manager endpoint create \
-  --profile-name TM-Failover \
+  --profile-name TM-Failover-Lab \
   --resource-group RG-Healing-Lab \
   --name SEA-Primary \
   --type azureEndpoints \
-  --target-resource-id <sea-app-id> \
-  --priority 1
+  --target-resource-id $SEA_APP_ID \
+  --priority 1 \
+  --endpoint-status Enabled
+```
 
+#### Bước 4.10 – Thêm Secondary Endpoint (East Asia, Priority 2)
+
+```bash
 az network traffic-manager endpoint create \
-  --profile-name TM-Failover \
+  --profile-name TM-Failover-Lab \
   --resource-group RG-Healing-Lab \
   --name EA-Secondary \
   --type azureEndpoints \
-  --target-resource-id <ea-app-id> \
-  --priority 2
+  --target-resource-id $EA_APP_ID \
+  --priority 2 \
+  --endpoint-status Enabled
+```
 
-# Bước 4: Test DNS resolution
-nslookup myapp-failover-demo.trafficmanager.net
+Xác nhận cả 2 endpoints:
 
-# Bước 5: Gây sự cố - Stop primary
-az webapp stop --name myapp-sea --resource-group RG-Healing-Lab
+```bash
+az network traffic-manager endpoint list \
+  --profile-name TM-Failover-Lab \
+  --resource-group RG-Healing-Lab \
+  --type azureEndpoints \
+  --query "[].{name:name, priority:priority, endpointStatus:endpointStatus, endpointMonitorStatus:endpointMonitorStatus}" -o table
+# Kết quả mong đợi (sau 30-60 giây):
+# Name           Priority  EndpointStatus  EndpointMonitorStatus
+# -------------  --------  --------------  ---------------------
+# SEA-Primary    1         Enabled         Online
+# EA-Secondary   2         Enabled         Online
+```
 
-# Bước 6: Chờ failover (30-90 giây) rồi test lại
-sleep 60
-nslookup myapp-failover-demo.trafficmanager.net
-# → DNS sẽ trỏ sang EA endpoint
+> Nếu EndpointMonitorStatus là "CheckingEndpoint", chờ 30–60 giây rồi chạy lại.
 
-# Bước 7: Phục hồi primary
-az webapp start --name myapp-sea --resource-group RG-Healing-Lab
+#### Bước 4.11 – Ghi nhận trạng thái ban đầu và test Traffic Manager
+
+```bash
+echo "=== TRẠNG THÁI BAN ĐẦU ==="
+echo "Thời gian: $(date)"
+echo ""
+
+# DNS Resolution
+echo "--- DNS Resolution ---"
+nslookup $TM_DNS.trafficmanager.net
+echo ""
+
+# Truy cập qua Traffic Manager (sẽ được route đến Primary)
+echo "--- Truy cập qua Traffic Manager ---"
+curl -s https://$TM_DNS.trafficmanager.net/ | python3 -m json.tool
+echo ""
+
+# Gọi nhiều lần để xác nhận luôn đến Primary
+echo "--- Gọi 5 lần liên tiếp ---"
+for i in $(seq 1 5); do
+  REGION=$(curl -s https://$TM_DNS.trafficmanager.net/ | python3 -c "import sys,json; print(json.load(sys.stdin)['region'])" 2>/dev/null || echo "error")
+  echo "Lần $i: $REGION"
+done
+```
+
+> **Kết quả mong đợi:** Tất cả requests đều đến **Southeast-Asia-PRIMARY** (vì nó có priority 1).
+
+> 📸 Chụp screenshot – trạng thái "trước sự cố", traffic luôn đến Primary.
+
+#### Bước 4.12 – Gây sự cố: Stop Primary App Service
+
+```bash
+echo "=== GÂY SỰ CỐ: STOP PRIMARY ==="
+echo "Thời gian: $(date)"
+echo ""
+
+az webapp stop --name $APP_SEA --resource-group RG-Healing-Lab
+echo "✅ Primary App ($APP_SEA) đã bị stop."
+echo ""
+
+# Xác nhận Primary đã stop
+az webapp show \
+  --name $APP_SEA \
+  --resource-group RG-Healing-Lab \
+  --query "{name:name, state:state}" -o table
+# Kết quả mong đợi: State = Stopped
+```
+
+#### Bước 4.13 – Quan sát quá trình Failover
+
+```bash
+echo "=== QUAN SÁT FAILOVER ==="
+echo "Traffic Manager kiểm tra health mỗi 10 giây."
+echo "Sau 2 lần fail liên tiếp → endpoint chuyển sang Degraded."
+echo "DNS sẽ bắt đầu trỏ sang Secondary endpoint."
+echo ""
+
+# Theo dõi endpoint status (mỗi 15 giây, trong 3 phút)
+for i in $(seq 1 12); do
+  echo "--- Kiểm tra lần $i ($(date +%H:%M:%S)) ---"
+
+  # Kiểm tra endpoint monitor status
+  az network traffic-manager endpoint list \
+    --profile-name TM-Failover-Lab \
+    --resource-group RG-Healing-Lab \
+    --type azureEndpoints \
+    --query "[].{name:name, priority:priority, monitorStatus:endpointMonitorStatus}" -o table
+
+  # Thử truy cập qua Traffic Manager
+  RESPONSE=$(curl -s --max-time 5 https://$TM_DNS.trafficmanager.net/ 2>/dev/null || echo '{"region":"timeout/error"}')
+  REGION=$(echo $RESPONSE | python3 -c "import sys,json; print(json.load(sys.stdin).get('region','N/A'))" 2>/dev/null || echo "parse-error")
+  echo "→ Traffic đến: $REGION"
+  echo ""
+
+  sleep 15
+done
+```
+
+> **Kết quả mong đợi (theo thời gian):**
+> - **0–20 giây:** SEA-Primary vẫn Online (chưa đến lượt check tiếp)
+> - **20–40 giây:** SEA-Primary chuyển sang **Degraded** (health check fail 2 lần)
+> - **40–90 giây:** DNS bắt đầu trả về Secondary endpoint → Traffic đến **East-Asia-SECONDARY**
+> - **Sau 90 giây:** Tất cả traffic đều đến Secondary
+
+> 📸 Chụp screenshot khi thấy endpoint SEA-Primary chuyển sang Degraded VÀ traffic đã chuyển sang Secondary.
+
+#### Bước 4.14 – Xác nhận failover hoàn tất
+
+```bash
+echo "=== XÁC NHẬN FAILOVER ==="
+echo "Thời gian: $(date)"
+echo ""
+
+# Endpoint status
+az network traffic-manager endpoint list \
+  --profile-name TM-Failover-Lab \
+  --resource-group RG-Healing-Lab \
+  --type azureEndpoints \
+  --query "[].{name:name, priority:priority, monitorStatus:endpointMonitorStatus}" -o table
+echo ""
+
+# Gọi 5 lần – tất cả phải đến Secondary
+echo "--- Gọi 5 lần qua Traffic Manager ---"
+for i in $(seq 1 5); do
+  REGION=$(curl -s https://$TM_DNS.trafficmanager.net/ | python3 -c "import sys,json; print(json.load(sys.stdin)['region'])" 2>/dev/null || echo "error")
+  echo "Lần $i: $REGION"
+done
+```
+
+> **Kết quả mong đợi:** SEA-Primary = Degraded, EA-Secondary = Online. Tất cả traffic đến **East-Asia-SECONDARY**.
+
+#### Bước 4.15 – Phục hồi Primary và quan sát Failback
+
+```bash
+echo "=== PHỤC HỒI PRIMARY ==="
+echo "Thời gian: $(date)"
+echo ""
+
+# Start lại Primary App
+az webapp start --name $APP_SEA --resource-group RG-Healing-Lab
+echo "✅ Primary App ($APP_SEA) đã được start lại."
+echo ""
+
+# Chờ app khởi động (30 giây)
+echo "⏳ Chờ 30 giây cho app khởi động..."
+sleep 30
+
+# Xác nhận Primary đã chạy lại
+curl -s https://$APP_SEA.azurewebsites.net/health | python3 -m json.tool
+echo ""
+
+# Theo dõi failback (Traffic Manager detect primary healthy → chuyển traffic về)
+echo "=== QUAN SÁT FAILBACK ==="
+for i in $(seq 1 12); do
+  echo "--- Kiểm tra lần $i ($(date +%H:%M:%S)) ---"
+
+  az network traffic-manager endpoint list \
+    --profile-name TM-Failover-Lab \
+    --resource-group RG-Healing-Lab \
+    --type azureEndpoints \
+    --query "[].{name:name, priority:priority, monitorStatus:endpointMonitorStatus}" -o table
+
+  REGION=$(curl -s https://$TM_DNS.trafficmanager.net/ | python3 -c "import sys,json; print(json.load(sys.stdin).get('region','N/A'))" 2>/dev/null || echo "error")
+  echo "→ Traffic đến: $REGION"
+  echo ""
+
+  sleep 15
+done
+```
+
+> **Kết quả mong đợi:** Sau 30–90 giây, SEA-Primary chuyển lại Online → Traffic quay về **Southeast-Asia-PRIMARY**.
+
+> 📸 Chụp screenshot – failback hoàn tất, traffic trở lại Primary.
+
+#### Bước 4.16 – Tổng hợp kết quả cho báo cáo
+
+```bash
+echo "======================================"
+echo "  TỔNG HỢP KẾT QUẢ KỊCH BẢN 4"
+echo "======================================"
+echo ""
+echo "1. Ban đầu: Traffic → Southeast-Asia-PRIMARY (Priority 1)"
+echo "2. Gây sự cố: Stop Primary → Traffic Manager detect Degraded"
+echo "3. Failover: Traffic → East-Asia-SECONDARY (Priority 2)"
+echo "   Thời gian failover: ~30-90 giây"
+echo "4. Phục hồi: Start Primary → Traffic Manager detect Online"
+echo "5. Failback: Traffic → Southeast-Asia-PRIMARY"
+echo "   Thời gian failback: ~30-90 giây"
+echo ""
+echo "✅ Kết luận: Traffic Manager tự động failover/failback"
+echo "   mà không cần thay đổi DNS hay cấu hình client."
+```
+
+#### Bước 4.17 – Dọn dẹp tài nguyên kịch bản 4
+
+```bash
+# Xóa Traffic Manager Profile (sẽ xóa cả endpoints)
+az network traffic-manager profile delete \
+  --name TM-Failover-Lab \
+  --resource-group RG-Healing-Lab --yes
+
+# Xóa Web App Primary
+az webapp delete --name $APP_SEA --resource-group RG-Healing-Lab
+
+# Xóa Web App Secondary
+az webapp delete --name $APP_EA --resource-group RG-Healing-Lab
+
+# Xóa App Service Plans
+az appservice plan delete --name ASP-SEA-Primary --resource-group RG-Healing-Lab --yes
+az appservice plan delete --name ASP-EA-Secondary --resource-group RG-Healing-Lab --yes
+
+# Xác nhận
+az resource list --resource-group RG-Healing-Lab --query "[].{name:name, type:type}" -o table
+```
+
+---
+
+### 9.5 Dọn dẹp cuối cùng – Xóa Resource Group
+
+> ⚠️ Sau khi hoàn thành **tất cả** kịch bản, xóa Resource Group để đảm bảo không còn tài nguyên nào phát sinh chi phí.
+
+```bash
+# Xóa toàn bộ Resource Group (sẽ xóa TẤT CẢ tài nguyên bên trong)
+az group delete --name RG-Healing-Lab --yes --no-wait
+echo "✅ Đã gửi lệnh xóa Resource Group. Quá trình xóa sẽ mất 5–10 phút."
+
+# Xác nhận (sau 10 phút)
+az group exists --name RG-Healing-Lab
+# Kết quả mong đợi: false
 ```
 
 ---
