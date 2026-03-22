@@ -1104,7 +1104,7 @@ az webapp start --name myapp-sea --resource-group RG-Healing-Lab
 #### Phần 1: Đặt vấn đề (Slide 3-4)
 
 **Nội dung cần trình bày:**
-- Thống kê về downtime: Mỗi phút downtime gây thiệt hại trung bình $5,600 (theo Gartner)
+- Thống kê về downtime: Mỗi phút downtime gây thiệt hại trung bình $5,600 (theo Gartner, 2014 – "The Cost of Downtime")
 - Ví dụ thực tế: Các sự cố lớn (AWS outage, Azure outage) và thời gian phục hồi
 - So sánh: Manual recovery (phút → giờ) vs Self-Healing (giây → phút)
 - Đặt câu hỏi: "Làm sao để hệ thống tự phục hồi mà không cần gọi điện cho admin lúc 3 giờ sáng?"
