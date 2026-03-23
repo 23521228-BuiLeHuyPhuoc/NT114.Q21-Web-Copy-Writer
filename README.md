@@ -1,96 +1,50 @@
-# AI Copywriter – Báo Cáo Đồ Án
+# KẾ HOẠCH ĐỒ ÁN NT114
 
-## Thông Tin Đồ Án
+**Tên đề tài:** Xây dựng Website AI Copywriter tích hợp GPT-4/Llama, RESTful API xử lý trên backend và Fine-tuning để tinh chỉnh mô hình với ngành nghề cụ thể
 
-- **Đề tài:** Website hỗ trợ viết nội dung bằng AI (AI Copywriter)
-- **Môn học:** NT114.Q21
-- **Thực hiện:** Bùi Lê Huy Phước
-- **Mô tả:** Xây dựng website tích hợp GPT-4 / Llama để sinh nội dung tự động (blog, quảng cáo, email marketing, mô tả sản phẩm, …). Hệ thống cung cấp API RESTful cho AI model xử lý nội dung trên backend, đồng thời hỗ trợ fine-tuning (tinh chỉnh model) để phù hợp với ngành nghề cụ thể. Ngoài ra, hệ thống tích hợp **1 tính năng nâng cao** bao gồm:
-  - AI Plagiarism Detection
-  - *(Xem chi tiết tại [Mục 7 – Tính Năng Nâng Cao](#7-tính-năng-nâng-cao-advanced-features-))*
+**Sinh viên thực hiện:** Bùi Lê Huy Phước. **MSSV:** 23521228
 
 ---
 
-## 1. Công Nghệ Sử Dụng
+## 1. Công nghệ sử dụng
 
-### 1.1 Frontend (Client)
-
-| Công nghệ | Vai trò |
-|-----------|---------|
-| **Next.js 14** (App Router) | Framework React với SSR/SSG, routing, API routes |
-| **TypeScript** | Kiểm tra kiểu tĩnh, giảm lỗi runtime |
-| **Tailwind CSS** | Utility-first CSS framework, responsive design |
-| **Axios** | HTTP client gọi API backend |
-| **React Hook Form** | Quản lý form hiệu quả |
-| **Zustand** | State management nhẹ cho client |
-| **React Query (TanStack Query)** | Caching, fetching, syncing server state |
-| **React Markdown** | Render nội dung markdown từ AI |
-| **Chart.js / Recharts** | Vẽ biểu đồ thống kê trên dashboard |
-| **React Hot Toast** | Hiển thị thông báo toast |
-| **next-auth** | Xử lý xác thực phía client (JWT + Google OAuth) |
-
-### 1.2 Backend (Server)
-
-| Công nghệ | Vai trò |
-|-----------|---------|
-| **Node.js** | Runtime JavaScript phía server |
-| **Express.js** | Framework web xây dựng API RESTful |
-| **Mongoose** | ODM kết nối và thao tác MongoDB |
-| **bcrypt** | Mã hoá (hash) mật khẩu người dùng |
-| **Joi** (joi.dev) | Validate dữ liệu đầu vào (request body, params, query) |
-| **Regex** | Tìm kiếm nội dung, validate email/phone/URL, lọc dữ liệu |
-| **jsonwebtoken (JWT)** | Tạo và xác thực access token / refresh token |
-| **Multer** | Middleware xử lý file upload (avatar, dataset fine-tune) |
-| **Cloudinary** | Lưu trữ hình ảnh trên cloud (avatar, thumbnail) |
-| **Nodemailer** | Gửi email (xác minh tài khoản, đặt lại mật khẩu, thông báo) |
-| **OpenAI SDK** | Gọi API GPT-4 để sinh nội dung |
-| **Ollama** | Chạy Llama model local cho sinh nội dung |
-| **LangChain.js** | Orchestrate AI model, prompt chaining, output parsing |
-| **express-rate-limit** | Giới hạn request (chống spam, bảo vệ API) |
-| **helmet** | Bảo mật HTTP headers |
-| **cors** | Cấu hình Cross-Origin Resource Sharing |
-| **morgan** | Logging HTTP request |
-| **passport + passport-google-oauth20** | Đăng nhập qua Google OAuth 2.0 |
-| **Stripe SDK** | Tích hợp thanh toán quốc tế |
-| **plagiarism-checker / copyscape API** | Kiểm tra đạo văn nội dung AI sinh ra |
-
-### 1.3 Database & DevOps
-
-| Công nghệ | Vai trò |
-|-----------|---------|
-| **MongoDB** | Cơ sở dữ liệu NoSQL lưu trữ toàn bộ dữ liệu |
-| **MongoDB Atlas** | Hosting MongoDB trên cloud |
-| **Docker + Docker Compose** | Container hoá ứng dụng, môi trường phát triển |
-| **Vercel** | Deploy frontend (Next.js) |
-| **yarn** | Package manager (thay npm) cho cả client và server |
-
-### 1.4 Hướng Tiếp Cận AI
-
-| Hướng | Mô tả |
-|-------|-------|
-| **Tích hợp GPT-4** | Gọi OpenAI API (ChatCompletion) với system prompt được thiết kế riêng cho từng loại nội dung copywriting |
-| **Tích hợp Llama** | Chạy Llama model qua Ollama local, cung cấp lựa chọn model miễn phí cho user |
-| **API RESTful cho AI** | Xây dựng endpoint `POST /api/content/generate` nhận yêu cầu, gọi model AI, streaming response về client |
-| **Fine-tuning** | Upload dataset huấn luyện → gọi OpenAI Fine-tuning API hoặc fine-tune Llama local → tạo model chuyên biệt theo ngành (bất động sản, thời trang, công nghệ, …) |
-| **AI Plagiarism Detection** | So sánh nội dung sinh ra với cơ sở dữ liệu nội dung đã tạo + web scraping → tính tỉ lệ trùng lặp (cosine similarity trên embeddings) → cảnh báo nếu vượt ngưỡng |
-| **Prompt Engineering** | Mỗi loại nội dung (blog, quảng cáo, email, …) có system prompt riêng, kết hợp tone giọng + ngôn ngữ + template variables |
-| **Streaming (SSE)** | Sử dụng Server-Sent Events để stream nội dung từ AI về client theo thời gian thực |
+| Frontend | Backend | Database | Hướng tiếp cận AI |
+|----------|---------|----------|-------------------|
+| Next.js | Node.js | Cloudinary | Tích hợp GPT-4 |
+| TypeScript | Express.js | MongoDB | Tích hợp Llama |
+| Tailwind CSS | Mongoose | MongoDB Atlas | API RESTful cho AI |
+| Axios | Bcrypt | Docker + Docker Compose | Fine-tuning |
+| React Hook Form | Joi.dev | Redis | Streaming (SSE) |
+| React Query | Regex | | |
+| React Markdown | JWT | | |
+| Chart.js | Multer | | AI Plagiarism Detection ⭐ |
+| React Hot Toast | Nodemailer | | |
+| Next-auth | OpenAI SDK | | |
+| Zustand | Ollama | | |
+| | Express-rate-limit | | |
+| | passport + passport-google-oauth20 | | |
+| | helmet | | |
+| | cors | | |
+| | morgan | | |
+| | yarn | | |
+| | Stripe SDK | | |
+| | plagiarism-checker ⭐ | | |
 
 ---
 
-## 2. Cấu Trúc Thư Mục Dự Án
+## 2. Cấu trúc thư mục
 
-### 2.1 Tổng Quan
+### 2.1. Tổng quan
 
 ```
 ai-copywriter/
 ├── client/                     # Frontend (Next.js)
 ├── server/                     # Backend (Express.js)
-├── docker-compose.yml          # Chạy toàn bộ hệ thống
-└── README.md                   # Tài liệu dự án
+├── docker-compose.yml
+└── README.md
 ```
 
-### 2.2 Client (Next.js) – Cấu Trúc Thư Mục
+### 2.2. Client (Frontend)
 
 ```
 client/
@@ -124,7 +78,7 @@ client/
 └── yarn.lock                   # Lock file (yarn)
 ```
 
-### 2.3 Server (Express.js) – Cấu Trúc Thư Mục
+### 2.3. Server (Backend)
 
 ```
 server/
@@ -137,7 +91,7 @@ server/
 │   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, errorHandler)
 │   ├── validations/            # Joi validation schemas (authValidation, contentValidation, ...)
 │   ├── utils/                  # Hàm tiện ích (regex patterns, email sender, token generator, ...)
-│   └── app.js                  # Entry point – khởi tạo Express, mount routes
+│   └── app.js                  # Entry point – khởi tạo Express, , mount routes
 ├── uploads/                    # Thư mục tạm lưu file upload trước khi đẩy lên Cloudinary
 ├── .env.example                # Mẫu biến môi trường
 ├── package.json                # Dependencies & scripts
@@ -145,368 +99,31 @@ server/
 └── Dockerfile                  # Docker build cho server
 ```
 
-## 3. Chi Tiết Công Việc Phía Client (Frontend)
+### 2.4. Database (MongoDB)
 
-### 3.1 Trang Công Khai
-
-| Trang | Chức năng chi tiết |
-|-------|-------------------|
-| `/` Landing Page | Hero section giới thiệu AI Copywriter → các tính năng nổi bật (sinh nội dung, nhiều model AI, fine-tuning) → bảng giá 3 gói (Free/Pro/Enterprise) → testimonials → call-to-action đăng ký |
-| `/login` Đăng nhập | Form nhập email + password → validate bằng React Hook Form → gọi `POST /api/auth/login` → lưu JWT token → redirect dashboard. Nút đăng nhập Google OAuth. Link quên mật khẩu |
-| `/register` Đăng ký | Form nhập tên + email + password + xác nhận password → validate (email regex, password ≥ 8 ký tự) → gọi `POST /api/auth/register` → thông báo xác minh email |
-| `/forgot-password` Quên MK | Form nhập email → gọi `POST /api/auth/forgot-password` → thông báo đã gửi email |
-| `/reset-password` Đặt lại MK | Form nhập password mới + xác nhận → gọi `POST /api/auth/reset-password` với token từ URL |
-| `/contact` Liên hệ | Form liên hệ (tên, email, nội dung) → gọi API gửi email cho admin |
-
-### 3.2 Trang Người Dùng (Yêu cầu đăng nhập)
-
-| Trang | Chức năng chi tiết |
-|-------|-------------------|
-| `/dashboard` Dashboard | Hiển thị card tổng quan: số nội dung đã tạo, token đã dùng / giới hạn, gói hiện tại. Biểu đồ sử dụng theo ngày/tuần/tháng (Chart.js). Danh sách 5 nội dung gần đây (truy cập nhanh). Nút tắt "Tạo nội dung mới". Thông báo hệ thống mới nhất |
-| `/generate` Sinh nội dung AI | **Trang chính của ứng dụng.** Form chọn loại nội dung (blog/quảng cáo/email/sản phẩm/social/SEO/script/headline) → nhập chủ đề/từ khóa/mô tả → chọn tone giọng → chọn ngôn ngữ → chọn model AI (GPT-4/Llama/fine-tuned) → tùy chỉnh độ dài + temperature → nhấn "Sinh nội dung". Khu vực hiển thị kết quả: streaming real-time (SSE), chỉnh sửa trực tiếp, nút Copy/Lưu/Tạo lại. Chọn lưu vào dự án |
-| `/contents` Quản lý nội dung | Bảng danh sách nội dung đã tạo với phân trang. Thanh tìm kiếm theo từ khóa (regex search). Bộ lọc: theo loại, ngày tạo, dự án, yêu thích. Sắp xếp theo ngày tạo/tên. Mỗi item: xem chi tiết, sửa, xóa, đánh dấu yêu thích, gắn tag. Xuất nội dung (Copy/PDF/Word) |
-| `/contents/:id` Chi tiết nội dung | Hiển thị đầy đủ nội dung đã sinh. Chỉnh sửa trực tiếp (editor). Lịch sử phiên bản (version history) – xem/khôi phục phiên bản cũ. Thông tin meta: model, tone, ngôn ngữ, token, ngày tạo. Nút xuất (Copy/PDF/Word) |
-| `/projects` Quản lý dự án | Danh sách dự án dạng card/grid. Tạo dự án mới (tên, mô tả). Mỗi dự án hiển thị: số nội dung, ngày tạo. Click vào → chi tiết dự án |
-| `/projects/:id` Chi tiết dự án | Thông tin dự án + danh sách nội dung trong dự án. Sửa tên/mô tả dự án. Gán/gỡ nội dung. Lưu trữ (archive) dự án |
-| `/templates` Thư viện template | Duyệt template hệ thống (admin tạo) và template cá nhân. Lọc theo danh mục (category) / loại nội dung. Tạo template tùy chỉnh: nhập tên, mô tả, prompt template với biến `{{variable}}`, khai báo biến. Chọn template → điền biến → sinh nội dung |
-| `/fine-tune` Fine-tuning | Upload dataset (kéo thả file JSON/CSV) → Multer upload → Cloudinary/server lưu trữ. Tạo job fine-tuning mới: chọn base model, ngành nghề, tham số (epochs, learning rate). Bảng theo dõi jobs: trạng thái (pending/training/completed/failed). Danh sách model đã fine-tune → chọn sử dụng khi sinh nội dung |
-| `/plagiarism-check` Plagiarism Detection | **[TÍNH NĂNG NÂNG CAO]** Kiểm tra đạo văn nội dung: paste hoặc chọn nội dung đã tạo → hệ thống tính cosine similarity với database nội dung + web sources → hiển thị tỉ lệ trùng lặp (%), highlight đoạn trùng, nguồn gốc. Lịch sử kiểm tra. Tích hợp nút kiểm tra ngay sau khi sinh nội dung |
-| `/profile` Hồ sơ cá nhân | Xem/cập nhật thông tin: tên, email, avatar (upload ảnh → Multer + Cloudinary). Đổi mật khẩu (nhập mật khẩu cũ + mới). Thống kê sử dụng: token đã dùng, số nội dung, gói hiện tại. Quản lý API key cá nhân. Cài đặt thông báo |
-| `/billing` Thanh toán | Hiển thị gói hiện tại + giới hạn. So sánh 3 gói (Free/Pro/Enterprise). Nút nâng cấp → Stripe checkout. Lịch sử thanh toán. Quản lý subscription (gia hạn/hủy) |
-| `/notifications` Thông báo | Danh sách thông báo (phân trang). Đánh dấu đã đọc / đọc tất cả. Lọc theo loại (system/billing/fine-tune/account) |
-
-### 3.3 Trang Quản Trị Admin (Yêu cầu role `admin`)
-
-| Trang | Chức năng chi tiết |
-|-------|-------------------|
-| `/admin` Dashboard Admin | Card tổng quan: tổng user, tổng nội dung, tổng doanh thu, user hoạt động hôm nay. Biểu đồ tăng trưởng user theo tháng. Biểu đồ doanh thu theo tháng. Thống kê AI: tổng token tiêu thụ, phân bổ theo model (GPT-4 vs Llama) |
-| `/admin/users` Quản lý User | Bảng danh sách user (phân trang). Tìm kiếm theo tên/email (regex search). Lọc theo role/gói/trạng thái. Xem chi tiết user: thông tin, thống kê, lịch sử thanh toán. Hành động: kích hoạt/vô hiệu hóa, đổi role, xóa tài khoản |
-| `/admin/contents` Quản lý nội dung | Bảng tất cả nội dung trên hệ thống. Tìm kiếm, lọc theo loại/user/model. Xóa nội dung vi phạm. Thống kê nội dung theo loại, ngôn ngữ, model |
-| `/admin/templates` Quản lý template | CRUD template hệ thống (template mặc định cho tất cả user). Phân loại theo category. Duyệt/ẩn template do user tạo (nếu public) |
-| `/admin/categories` Quản lý danh mục | CRUD danh mục template. Hỗ trợ phân cấp (parent → child). Gán icon cho danh mục |
-| `/admin/plans` Quản lý gói dịch vụ | Cấu hình gói: tên, giá, giới hạn token, tính năng, model được phép, số dự án tối đa. Bật/tắt gói |
-| `/admin/payments` Quản lý thanh toán | Lịch sử thanh toán toàn hệ thống. Thống kê doanh thu theo tháng/gói. Xử lý hoàn tiền |
-| `/admin/models` Quản lý Model AI | Danh sách model (GPT-4, Llama, fine-tuned). Bật/tắt model. Cấu hình giới hạn token, giá/token cho từng model. Quản lý API key (OpenAI, Ollama endpoint) |
-| `/admin/settings` Cài đặt hệ thống | Cấu hình chung: tên site, logo (upload Cloudinary), thông tin liên hệ. Cấu hình email SMTP. Rate limiting. Quản lý system prompt mặc định cho từng loại nội dung. Maintenance mode |
-| `/admin/audit-logs` Nhật ký hệ thống | Bảng log hành động: đăng nhập, đổi role, xóa nội dung, thay đổi cấu hình. Lọc theo thời gian/user/hành động. Xuất log |
+| Collection | Mô tả |
+|------------|-------|
+| Users | Tài khoản, role, avatar, googleId |
+| Contents | Nội dung AI sinh ra, prompt, model, tags, versions |
+| Templates | Prompt template có biến, phân loại |
+| Categories | Danh mục phân cấp cho template |
+| Projects | Dự án nhóm nội dung |
+| Plans | Gói dịch vụ (Free/Pro/Enterprise) |
+| Subscriptions | Đăng ký gói của user |
+| Payments | Lịch sử thanh toán Stripe |
+| FineTuneJobs | Job fine-tuning model AI |
+| Notifications | Thông báo cho user |
+| UsageLogs | Log sử dụng AI (token, model) |
+| AuditLogs | Log hành động hệ thống |
+| SystemSettings | Cài đặt hệ thống (key/value) |
+| PlagiarismReports ⭐ | Báo cáo kiểm tra đạo văn (similarity %, matches, web sources) |
 
 ---
 
-## 4. Chi Tiết Công Việc Phía Server (Backend)
+## 3. Chi tiết công việc frontend
 
-### 4.1 API Xác Thực (`/api/auth`)
+### 3.1. Trang công khai
 
-| Công việc | Mô tả |
-|-----------|-------|
-| Đăng ký | Nhận `name, email, password` → validate bằng **Joi** (email regex, password ≥ 8 ký tự có chữ hoa + số + ký tự đặc biệt) → kiểm tra email trùng → hash password bằng **bcrypt** (salt round 10) → lưu user vào MongoDB → gửi email xác minh qua Nodemailer → trả về thông báo |
-| Đăng nhập | Nhận `email, password` → validate Joi → tìm user theo email → so sánh password bằng **bcrypt.compare()** → tạo JWT access token (15 phút) + refresh token (7 ngày) → cập nhật `lastLoginAt` → ghi AuditLog → trả token |
-| Refresh token | Nhận refresh token → verify → tạo access token mới |
-| Đăng nhập Google | Passport Google OAuth 2.0 → callback → tìm/tạo user theo googleId → tạo JWT → redirect về client |
-| Xác minh email | Nhận token từ URL → verify → cập nhật `emailVerified = true` |
-| Quên mật khẩu | Nhận email → validate Joi (email regex) → tìm user → tạo reset token (JWT 1 giờ) → gửi email chứa link reset |
-| Đặt lại mật khẩu | Nhận token + password mới → verify token → validate password bằng Joi → hash bằng **bcrypt** → cập nhật password |
-
-### 4.2 API Sinh Nội Dung AI (`/api/content`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Sinh nội dung | Nhận `type, prompt, tone, language, model, length, temperature` → validate bằng **Joi** (type enum, prompt required, temperature 0-2) → kiểm tra giới hạn token user → **aiService** chọn model (GPT-4/Llama/fine-tuned) → xây dựng system prompt theo type + tone + language → gọi API (OpenAI hoặc Ollama) → **streaming response (SSE)** về client → lưu content vào MongoDB → cập nhật UsageLog → trả kết quả |
-| CRUD nội dung | `GET /` lấy danh sách (phân trang, lọc bằng **regex** tìm kiếm từ khóa, lọc theo type/projectId/isFavorite), `GET /:id` chi tiết, `PUT /:id` cập nhật (lưu version cũ vào mảng versions), `DELETE /:id` xóa |
-| Đánh dấu yêu thích | `PATCH /:id/favorite` toggle isFavorite |
-| Gắn tag | `PATCH /:id/tags` cập nhật mảng tags |
-| Xuất nội dung | `GET /:id/export?format=pdf\|docx` sinh file PDF/Word và trả về |
-
-### 4.3 API Template (`/api/templates`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| CRUD template | Tạo template mới (validate bằng Joi: name required, variables array), lấy danh sách (lọc theo category/type, tìm kiếm bằng regex), cập nhật, xóa |
-| Template variables | Khi user chọn template → trả về danh sách variables → user điền giá trị → thay thế biến trong promptTemplate (dùng **regex** replace `{{variable}}`) → sinh nội dung |
-| Template hệ thống vs user | `isSystem = true` chỉ admin tạo/sửa/xóa. `isPublic = true` cho phép user khác sử dụng |
-
-### 4.4 API Dự Án (`/api/projects`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| CRUD dự án | Tạo dự án (validate Joi: name required), lấy danh sách, cập nhật, xóa (cascade xóa liên kết content). Mỗi dự án thuộc 1 user |
-| Gán nội dung | Gán/gỡ content vào project, cập nhật contentCount |
-
-### 4.5 API Fine-tuning (`/api/fine-tune`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Upload dataset | **Multer** nhận file CSV/JSON → validate format + kích thước → lưu tạm `uploads/` → đẩy lên **Cloudinary** (hoặc lưu server) → trả URL |
-| Tạo job fine-tuning | Nhận `baseModel, industry, config` → validate Joi → gọi OpenAI Fine-tuning API hoặc Llama fine-tune script → lưu FineTuneJob (status: pending) → chạy training (background job) → cập nhật status |
-| Theo dõi job | `GET /jobs` danh sách jobs, `GET /jobs/:id` chi tiết + trạng thái |
-| Danh sách model fine-tuned | `GET /models` trả về model đã fine-tune thành công, dùng để chọn khi sinh nội dung |
-
-
-
-### 4.6 API Plagiarism Detection (`/api/plagiarism`) ⭐ NÂNG CAO
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Kiểm tra đạo văn | `POST /check` nhận content text → chia thành segments → tạo embeddings → **cosine similarity** so sánh với tất cả embeddings trong database (nội dung đã tạo trước đó) → tìm segments có similarity > threshold (mặc định 0.85, cấu hình qua SystemSettings) → trả kết quả: tổng % trùng lặp, danh sách đoạn trùng kèm nguồn gốc (contentId, userId, createdAt) |
-| Web plagiarism check | `POST /check-web` nhận content text → trích xuất key sentences → search Google/Bing API → scrape top results → so sánh similarity → trả nguồn web trùng lặp |
-| Lịch sử kiểm tra | `GET /history` danh sách các lần kiểm tra (phân trang). `GET /history/:id` chi tiết kết quả |
-| Auto-check on generate | Hook vào content generation flow: sau khi AI sinh nội dung → tự động chạy plagiarism check → lưu kết quả → cảnh báo user nếu tổng tỉ lệ trùng lặp > 20% (ngưỡng cảnh báo, cấu hình qua SystemSettings; khác với segment similarity threshold 85% ở trên – 85% dùng để xác định từng đoạn trùng, 20% là ngưỡng cảnh báo tổng thể) |
-
-
-### 4.7 API Người Dùng (`/api/users`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Xem profile | `GET /profile` trả thông tin user đang đăng nhập |
-| Cập nhật profile | `PUT /profile` validate Joi → cập nhật tên, avatar (upload ảnh → **Multer** → **Cloudinary** lưu trữ → lưu URL vào DB) |
-| Đổi mật khẩu | `PUT /change-password` nhận password cũ + mới → **bcrypt.compare** password cũ → validate password mới bằng Joi (regex pattern) → **bcrypt.hash** → cập nhật |
-| Thống kê sử dụng | `GET /usage` trả tổng token dùng, số nội dung, giới hạn gói |
-
-### 4.8 API Thanh Toán (`/api/billing`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Tạo checkout session | `POST /checkout` nhận planId → Stripe.checkout.sessions.create → trả redirect URL |
-| Webhook Stripe | `POST /webhook` nhận event từ Stripe → cập nhật Subscription + Payment |
-| Lịch sử thanh toán | `GET /payments` danh sách thanh toán của user |
-| Quản lý subscription | `GET /subscription` xem gói hiện tại, `POST /cancel` hủy subscription |
-
-### 4.9 API Thông Báo (`/api/notifications`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Lấy thông báo | `GET /` danh sách thông báo (phân trang, lọc theo type/isRead) |
-| Đánh dấu đã đọc | `PATCH /:id/read` đánh dấu 1 thông báo, `PATCH /read-all` đánh dấu tất cả |
-
-### 4.10 API Admin (`/api/admin`)
-
-| Công việc | Mô tả |
-|-----------|-------|
-| Dashboard | `GET /stats` trả tổng user, tổng nội dung, doanh thu, user hoạt động. `GET /charts/users` tăng trưởng user. `GET /charts/revenue` doanh thu. `GET /charts/usage` thống kê AI token |
-| Quản lý user | `GET /users` danh sách (tìm kiếm bằng **regex**, lọc role/gói/trạng thái), `GET /users/:id` chi tiết, `PATCH /users/:id/status` kích hoạt/vô hiệu, `PATCH /users/:id/role` đổi role, `DELETE /users/:id` xóa |
-| Quản lý nội dung | `GET /contents` tất cả nội dung, `DELETE /contents/:id` xóa vi phạm, `GET /contents/stats` thống kê |
-| Quản lý template | CRUD template hệ thống (`isSystem = true`) |
-| Quản lý danh mục | CRUD categories (validate Joi: name + slug unique, slug regex) |
-| Quản lý gói | CRUD plans (validate Joi: price ≥ 0, tokenLimit > 0) |
-| Quản lý thanh toán | `GET /payments` tất cả thanh toán, `POST /payments/:id/refund` hoàn tiền |
-| Quản lý model | `GET /models` danh sách, `PATCH /models/:id` bật/tắt + cấu hình |
-| Cài đặt hệ thống | `GET /settings` lấy tất cả, `PUT /settings/:key` cập nhật (validate Joi) → ghi AuditLog |
-| Audit log | `GET /audit-logs` lấy log (lọc theo thời gian/user/action bằng **regex**) |
-
-### 4.11 Middleware & Tiện Ích
-
-| Thành phần | Mô tả |
-|-----------|-------|
-| `auth.js` middleware | Kiểm tra JWT token trong header `Authorization: Bearer <token>` → decode → gắn `req.user`. Xử lý: token hết hạn, không hợp lệ, không có token |
-| `role.js` middleware | Kiểm tra `req.user.role` có nằm trong danh sách role cho phép không. Ví dụ: `role('admin')` chỉ cho admin truy cập |
-| `validate.js` middleware | Nhận **Joi** schema → validate `req.body` / `req.params` / `req.query` → trả lỗi 400 nếu không hợp lệ |
-| `upload.js` middleware | Cấu hình **Multer**: storage (disk), file filter (chỉ cho phép image/csv/json), size limit (5MB ảnh, 50MB dataset) |
-| `rateLimiter.js` middleware | **express-rate-limit**: giới hạn 100 req/15 phút cho API chung, 10 req/15 phút cho API sinh nội dung (tránh lạm dụng AI) |
-| `errorHandler.js` middleware | Bắt tất cả lỗi → format response thống nhất `{ success: false, message, errors }` |
-| **Regex patterns** (`utils/`) | `EMAIL_REGEX` validate email, `PHONE_REGEX` validate SĐT, `URL_REGEX` validate URL, `SLUG_REGEX` validate slug, `SEARCH_REGEX(keyword)` tạo regex tìm kiếm không dấu từ keyword input, `PASSWORD_REGEX` validate password strength |
-| **Cloudinary** (`services/`) | Upload ảnh avatar/logo lên Cloudinary → trả `secure_url`. Xóa ảnh cũ khi cập nhật. Tự động resize/optimize |
-
----
-
-## 5. Thiết Kế Database (MongoDB)
-
-### Collection: Users
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| name | String | Tên hiển thị |
-| email | String, unique | Email đăng nhập (validate bằng regex) |
-| password | String | Mật khẩu đã hash bằng **bcrypt** |
-| avatar | String | URL ảnh đại diện trên **Cloudinary** |
-| role | String, enum | `user` / `premium` / `admin` |
-| emailVerified | Boolean | Đã xác minh email |
-| googleId | String | ID đăng nhập Google OAuth |
-| subscriptionId | ObjectId, ref | Gói dịch vụ hiện tại |
-| apiKey | String | API key cá nhân |
-| notificationSettings | Object | Cài đặt thông báo (email, inApp) |
-| isActive | Boolean | Tài khoản hoạt động / bị khóa |
-| lastLoginAt | Date | Lần đăng nhập cuối |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: Subscriptions
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | User sở hữu |
-| planId | ObjectId, ref | Gói dịch vụ |
-| status | String, enum | `active` / `canceled` / `expired` |
-| currentPeriodStart | Date | Bắt đầu chu kỳ |
-| currentPeriodEnd | Date | Kết thúc chu kỳ |
-| stripeSubscriptionId | String | ID subscription trên Stripe |
-| autoRenew | Boolean | Tự động gia hạn |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: Plans
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| name | String | Tên gói (Free, Pro, Enterprise) |
-| price | Number | Giá |
-| currency | String | Đơn vị tiền (USD, VND) |
-| billingCycle | String, enum | `monthly` / `yearly` |
-| tokenLimit | Number | Giới hạn token / tháng |
-| features | [String] | Danh sách tính năng |
-| allowedModels | [String] | Model AI được phép sử dụng |
-| maxProjects | Number | Số dự án tối đa |
-| isActive | Boolean | Gói có đang bán |
-| stripePriceId | String | ID price trên Stripe |
-
-### Collection: Payments
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | User |
-| subscriptionId | ObjectId, ref | Subscription |
-| amount | Number | Số tiền |
-| currency | String | Đơn vị tiền |
-| paymentMethod | String | Phương thức (card, banking) |
-| stripePaymentIntentId | String | ID giao dịch Stripe |
-| status | String, enum | `pending` / `completed` / `failed` / `refunded` |
-| invoiceUrl | String | Link hóa đơn |
-| createdAt | Date | Ngày thanh toán |
-
-### Collection: Projects
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | Người tạo |
-| name | String | Tên dự án |
-| description | String | Mô tả |
-| contentCount | Number | Số nội dung |
-| isArchived | Boolean | Đã lưu trữ |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: Contents
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | Người tạo |
-| projectId | ObjectId, ref | Thuộc dự án (nullable) |
-| title | String | Tiêu đề nội dung |
-| type | String, enum | `blog` / `ad` / `email` / `product` / `social` / `seo` / `script` / `headline` |
-| prompt | String | Yêu cầu đầu vào |
-| generatedContent | String | Nội dung AI sinh ra |
-| model | String | Model AI đã dùng (gpt-4, llama, fine-tuned-xxx) |
-| tone | String | Tone giọng |
-| language | String | Ngôn ngữ |
-| templateId | ObjectId, ref | Template đã dùng (nullable) |
-| tags | [String] | Danh sách tag |
-| isFavorite | Boolean | Yêu thích |
-| tokensUsed | Number | Số token tiêu thụ |
-| versions | [Object] | Lịch sử phiên bản `[{ content, editedAt }]` |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: Templates
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| name | String | Tên template |
-| description | String | Mô tả |
-| type | String, enum | Loại nội dung |
-| categoryId | ObjectId, ref | Danh mục |
-| promptTemplate | String | Nội dung prompt có biến `{{variable}}` |
-| variables | [Object] | `[{ name, description, defaultValue }]` |
-| isSystem | Boolean | Template hệ thống (admin tạo) |
-| isPublic | Boolean | Công khai |
-| createdBy | ObjectId, ref | Người tạo |
-| rating | Number | Đánh giá trung bình |
-| usageCount | Number | Số lần sử dụng |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: Categories
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| name | String | Tên danh mục |
-| slug | String, unique | Slug URL (validate bằng regex) |
-| description | String | Mô tả |
-| parentId | ObjectId, ref | Danh mục cha (phân cấp) |
-| icon | String | Icon hiển thị |
-| isActive | Boolean | Đang sử dụng |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: FineTuneJobs
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | Người tạo |
-| modelName | String | Tên model tùy chỉnh |
-| baseModel | String | Model gốc (gpt-4, llama) |
-| industry | String | Ngành nghề |
-| status | String, enum | `pending` / `training` / `completed` / `failed` |
-| datasetUrl | String | URL file dataset (Cloudinary) |
-| config | Object | `{ epochs, learningRate, batchSize }` |
-| result | Object | `{ modelId, accuracy, trainingTime }` |
-| createdAt, updatedAt | Date | Timestamps |
-
-### Collection: Notifications
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | Người nhận |
-| type | String, enum | `system` / `billing` / `fine-tune` / `account` |
-| title | String | Tiêu đề |
-| message | String | Nội dung |
-| isRead | Boolean | Đã đọc |
-| link | String | Link liên quan |
-| createdAt | Date | Ngày tạo |
-
-### Collection: UsageLogs
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | User |
-| action | String, enum | `generate` / `regenerate` / `fine-tune` |
-| model | String | Model đã dùng |
-| tokensUsed | Number | Số token |
-| contentId | ObjectId, ref | Nội dung liên quan |
-| ip | String | Địa chỉ IP |
-| userAgent | String | Thông tin trình duyệt |
-| createdAt | Date | Ngày ghi log |
-
-### Collection: AuditLogs
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| userId | ObjectId, ref | Người thực hiện |
-| action | String | Hành động (`user.login`, `user.role_change`, `content.delete`, `system.config_update`) |
-| targetType | String | Loại đối tượng (`user`, `content`, `setting`) |
-| targetId | ObjectId | ID đối tượng |
-| details | Object | Chi tiết bổ sung |
-| ip | String | Địa chỉ IP |
-| createdAt | Date | Ngày ghi log |
-
-### Collection: SystemSettings
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| key | String, unique | Tên cấu hình (`site_name`, `smtp_host`, `maintenance_mode`, …) |
-| value | Mixed | Giá trị |
-| description | String | Mô tả |
-| updatedBy | ObjectId, ref | Admin cập nhật cuối |
-| updatedAt | Date | Lần cập nhật cuối |
-
-### Collection: PlagiarismReports ⭐ NÂNG CAO
-
-| Trường | Kiểu | Mô tả |
-|--------|------|-------|
-| contentId | ObjectId, ref | Nội dung kiểm tra |
-| userId | ObjectId, ref | Người kiểm tra |
-| overallSimilarity | Number | Tỉ lệ trùng lặp tổng (%) |
-| matches | [Object] | `[{ sourceContentId, sourceUserId, segment, similarity, sourceSegment }]` danh sách đoạn trùng |
-| webMatches | [Object] | `[{ url, title, segment, similarity }]` nguồn web trùng |
-| status | String, enum | `pending` / `completed` / `failed` |
-| checkedAt | Date | Ngày kiểm tra |
-
----
-
-## 6. Giao Diện (Routes) Tổng Hợp
-
-### Trang Công Khai
 | Route | Trang |
 |-------|-------|
 | `/` | Landing page (giới thiệu, tính năng, bảng giá) |
@@ -516,7 +133,8 @@ server/
 | `/reset-password` | Đặt lại mật khẩu |
 | `/contact` | Liên hệ |
 
-### Trang Người Dùng (yêu cầu đăng nhập)
+### 3.2. Trang người dùng
+
 | Route | Trang |
 |-------|-------|
 | `/dashboard` | Dashboard tổng quan |
@@ -527,12 +145,13 @@ server/
 | `/projects/:id` | Chi tiết dự án |
 | `/templates` | Thư viện template |
 | `/fine-tune` | Quản lý fine-tuning |
-| `/plagiarism-check` | Plagiarism Detection – kiểm tra đạo văn ⭐ |
+| `/plagiarism-check` ⭐ | Plagiarism Detection – kiểm tra đạo văn nội dung AI |
 | `/profile` | Hồ sơ cá nhân & cài đặt |
 | `/billing` | Gói dịch vụ & thanh toán |
 | `/notifications` | Thông báo |
 
-### Trang Admin (yêu cầu role `admin`)
+### 3.3. Trang Admin
+
 | Route | Trang |
 |-------|-------|
 | `/admin` | Dashboard admin |
@@ -548,24 +167,121 @@ server/
 
 ---
 
+## 4. Middleware/Bảo mật
+
+1. **JWT Authentication** – access token (15 phút) + refresh token (7 ngày)
+2. **Role-based Access** – phân quyền user / premium / admin
+3. **Joi Validation** – validate toàn bộ input (body, params, query)
+4. **Regex Patterns** – validate email, phone, URL, slug, password, tìm kiếm
+5. **Rate Limiting** – 100 req/15 phút (chung), 10 req/15 phút (AI generate)
+6. **Helmet + CORS** – bảo mật HTTP headers
+7. **Multer + Cloudinary** – upload file an toàn, lưu trữ cloud
+
+---
+
+## 5. Hướng tiếp cận AI
+
+| Kỹ thuật | Mô tả |
+|----------|-------|
+| GPT-4 (OpenAI API) | Sinh nội dung chất lượng cao qua ChatCompletion |
+| Llama (Ollama local) | Model miễn phí chạy local |
+| Fine-tuning | Tinh chỉnh model theo ngành nghề cụ thể |
+| Prompt Engineering | System prompt riêng cho từng loại nội dung + tone + ngôn ngữ |
+| LangChain.js | Orchestrate model, prompt chaining, output parsing |
+| Streaming (SSE) | Server-Sent Events trả nội dung real-time |
+| | Upload tài liệu → trích xuất text → tạo embeddings → lưu vào vector DB (Pinecone) → khi sinh nội dung, semantic search lấy context liên quan → đưa vào prompt AI → sinh nội dung chính xác dựa trên tài liệu tham khảo |
+| | Phân tích nội dung: readability score (Flesch-Kincaid, Coleman-Liau), sentiment analysis, keyword density, SEO score → đề xuất cải thiện |
+| AI Plagiarism Detection ⭐ | So sánh nội dung bằng cosine similarity trên embeddings → phát hiện đoạn trùng lặp → cảnh báo nếu vượt ngưỡng |
+
+---
+
+## 6. Module Chức năng (10 module)
+
+### Module 1 – Xác Thực & Tài Khoản
+
++ Đăng ký / đăng nhập (email + Google OAuth)
++ Quên & đặt lại mật khẩu, xác minh email
++ Quản lý hồ sơ cá nhân (avatar, đổi password)
++ API: `/api/auth/*`, `/api/users/*`
++ DB: Users, AuditLogs
+
+### Module 2 – Sinh Nội Dung AI
+
++ Sinh nội dung: blog, quảng cáo, email, sản phẩm, social, SEO, script, headline
++ Chọn model (GPT-4 / Llama / fine-tuned), tone, ngôn ngữ, temperature
++ Streaming real-time (SSE) từ AI về client
++ CRUD nội dung, yêu thích, gắn tag, lịch sử phiên bản, xuất PDF/Word
++ API: `/api/content/*`
++ DB: Contents, UsageLogs
+
+### Module 3 – Fine-tuning Model AI
+
++ Upload dataset (CSV/JSON) → Multer → Cloudinary
++ Tạo job fine-tuning (OpenAI API hoặc Llama local)
++ Theo dõi trạng thái: pending → training → completed/failed
++ Sử dụng model đã fine-tune khi sinh nội dung
++ API: `/api/fine-tune/*`
++ DB: FineTuneJobs
+
+### Module 4 – Template & Danh Mục
+
++ Template prompt có biến `{{variable}}`, tái sử dụng
++ Template hệ thống (admin) + template cá nhân (user)
++ Danh mục phân cấp (parent → child)
++ API: `/api/templates/*`, `/api/admin/categories`
++ DB: Templates, Categories
+
+### Module 5 – Quản Lý Dự Án
+
++ Tạo dự án, gán nội dung vào dự án, lưu trữ (archive)
++ API: `/api/projects/*`
++ DB: Projects
+
+### Module 6 – Thanh Toán & Gói Dịch Vụ
+
++ 3 gói: Free / Pro / Enterprise (giới hạn token, model, dự án)
++ Tích hợp Stripe: checkout, webhook, quản lý subscription
++ API: `/api/billing/*`
++ DB: Plans, Subscriptions, Payments
+
+### Module 7 – Thông Báo
+
++ Thông báo hệ thống, thanh toán, fine-tuning, tài khoản
++ Gửi email thông báo qua Nodemailer
++ Đánh dấu đã đọc / đọc tất cả
++ API: `/api/notifications/*`
++ DB: Notifications
+
+### Module 8 – Trang Công Khai
+
++ Landing page: giới thiệu, tính năng, bảng giá, testimonials
++ Trang liên hệ (gửi email qua Nodemailer)
+
+### Module 9 – Dashboard Người Dùng
+
++ Thống kê: nội dung đã tạo, token đã dùng, gói hiện tại
++ Biểu đồ sử dụng (Chart.js), nội dung gần đây, thông báo
+
+### Module 10 – Quản Trị Admin
+
++ Dashboard: tổng user, nội dung, doanh thu, biểu đồ tăng trưởng
++ Quản lý: user, nội dung, template, danh mục, gói dịch vụ, thanh toán, model AI
++ Cài đặt hệ thống, nhật ký audit log
++ API: `/api/admin/*`
++ DB: SystemSettings, AuditLogs
+
+---
+
 ## 7. Tính Năng Nâng Cao (Advanced Features) ⭐
 
-Các tính năng dưới đây là những thành phần **kỹ thuật khó**, thể hiện chiều sâu của đồ án và đòi hỏi kiến thức chuyên môn cao:
-
-
+Các tính năng dưới đây là những thành phần **kỹ thuật khó**, thể hiện chiều sâu của đồ án:
 
 ### 7.1 AI Plagiarism Detection System
 
-| Khía cạnh | Chi tiết |
-|-----------|----------|
-| **Vấn đề giải quyết** | AI có thể sinh nội dung trùng lặp với nội dung đã tạo trước đó hoặc nội dung trên web → cần phát hiện và cảnh báo |
-| **Kiến trúc** | Content → Segmentation (chia thành đoạn 3-5 câu) → Embedding (OpenAI) → Cosine Similarity Search (so với database embeddings + web scraping) → Threshold Detection (>85% = trùng lặp) → Report Generation (highlight đoạn trùng, nguồn gốc, % tổng) |
-| **Thách thức kỹ thuật** | Efficient similarity search trên large-scale data, fuzzy matching (paraphrased content), web scraping reliability, false positive reduction, performance optimization (tránh N×M comparison) |
-| **Công nghệ** | OpenAI Embeddings, Pinecone (similarity search), cosine similarity algorithm, web scraping (cheerio + axios), BullMQ (background checking) |
++ **Vấn đề:** AI có thể sinh nội dung trùng lặp → cần phát hiện và cảnh báo
++ **Kiến trúc:** Content → Segmentation → Embedding → Cosine Similarity Search (database + web scraping) → Threshold Detection (>85%) → Report (highlight đoạn trùng, nguồn gốc, % tổng)
++ **API:** `/api/plagiarism/*` (check, check-web, history)
++ **DB:** PlagiarismReports
 
 
-
-
-
----
 

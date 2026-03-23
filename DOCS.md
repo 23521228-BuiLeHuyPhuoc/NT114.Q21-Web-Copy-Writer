@@ -15,13 +15,12 @@
 | Tailwind CSS | Mongoose | MongoDB Atlas | API RESTful cho AI |
 | Axios | Bcrypt | Docker + Docker Compose | Fine-tuning |
 | React Hook Form | Joi.dev | Redis | Streaming (SSE) |
-| React Query | Regex | Elasticsearch | RAG (Retrieval-Augmented Generation) ⭐ |
-| React Markdown | JWT | Pinecone / Qdrant (Vector DB) ⭐ | NLP Content Analytics ⭐ |
+| React Query | Regex | | |
+| React Markdown | JWT | | |
 | Chart.js | Multer | | AI Plagiarism Detection ⭐ |
 | React Hot Toast | Nodemailer | | |
 | Next-auth | OpenAI SDK | | |
 | Zustand | Ollama | | |
-| D3.js / word-cloud ⭐ | LangChain.js | | |
 | | Express-rate-limit | | |
 | | passport + passport-google-oauth20 | | |
 | | helmet | | |
@@ -29,11 +28,6 @@
 | | morgan | | |
 | | yarn | | |
 | | Stripe SDK | | |
-| | BullMQ + Redis ⭐ | | |
-| | Elasticsearch client ⭐ | | |
-| | natural / compromise (NLP) ⭐ | | |
-| | pdf-parse / mammoth ⭐ | | |
-| | Pinecone SDK ⭐ | | |
 | | plagiarism-checker ⭐ | | |
 
 ---
@@ -89,16 +83,15 @@ client/
 ```
 server/
 ├── src/
-│   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, redis, elasticsearch, ...)
-│   ├── models/                 # Mongoose schemas & models (User, Content, Template, Document, ...)
-│   ├── routes/                 # Định nghĩa API routes (authRoutes, contentRoutes, ragRoutes, analyticsRoutes, ...)
-│   ├── controllers/            # Xử lý logic từng route (authController, contentController, ragController, ...)
-│   ├── services/               # Business logic (aiService, ragService, nlpService, plagiarismService, searchService, ...)
-│   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, cache, errorHandler)
-│   ├── validations/            # Joi validation schemas (authValidation, contentValidation, ragValidation, ...)
-│   ├── jobs/                   # BullMQ job processors (fineTuneJob, embeddingJob, analyticsJob, bulkGenerateJob)
+│   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, ...)
+│   ├── models/                 # Mongoose schemas & models (User, Content, Template, ...)
+│   ├── routes/                 # Định nghĩa API routes (authRoutes, contentRoutes, ...)
+│   ├── controllers/            # Xử lý logic từng route (authController, contentController, ...)
+│   ├── services/               # Business logic (aiService, plagiarismService, ...)
+│   ├── middlewares/            # Middleware (auth, role, validate, upload, rateLimiter, errorHandler)
+│   ├── validations/            # Joi validation schemas (authValidation, contentValidation, ...)
 │   ├── utils/                  # Hàm tiện ích (regex patterns, email sender, token generator, ...)
-│   └── app.js                  # Entry point – khởi tạo Express, Redis, Elasticsearch, mount routes
+│   └── app.js                  # Entry point – khởi tạo Express, , mount routes
 ├── uploads/                    # Thư mục tạm lưu file upload trước khi đẩy lên Cloudinary
 ├── .env.example                # Mẫu biến môi trường
 ├── package.json                # Dependencies & scripts
@@ -123,11 +116,7 @@ server/
 | UsageLogs | Log sử dụng AI (token, model) |
 | AuditLogs | Log hành động hệ thống |
 | SystemSettings | Cài đặt hệ thống (key/value) |
-| Documents ⭐ | Tài liệu RAG Knowledge Base (PDF/DOCX/TXT uploads, chunks, embeddings) |
-| DocumentChunks ⭐ | Chunks text đã chia từ tài liệu, lưu embeddingId cho Pinecone |
-| ContentAnalytics ⭐ | Kết quả phân tích NLP (readability, sentiment, keywords, SEO score) |
 | PlagiarismReports ⭐ | Báo cáo kiểm tra đạo văn (similarity %, matches, web sources) |
-| SearchLogs ⭐ | Log tìm kiếm Elasticsearch (query, results, click tracking) |
 
 ---
 
@@ -156,8 +145,6 @@ server/
 | `/projects/:id` | Chi tiết dự án |
 | `/templates` | Thư viện template |
 | `/fine-tune` | Quản lý fine-tuning |
-| `/knowledge-base` ⭐ | RAG Knowledge Base – upload & quản lý tài liệu tham khảo |
-| `/analytics` ⭐ | Content Analytics – phân tích NLP nội dung (readability, sentiment, SEO) |
 | `/plagiarism-check` ⭐ | Plagiarism Detection – kiểm tra đạo văn nội dung AI |
 | `/profile` | Hồ sơ cá nhân & cài đặt |
 | `/billing` | Gói dịch vụ & thanh toán |
@@ -189,7 +176,6 @@ server/
 5. **Rate Limiting** – 100 req/15 phút (chung), 10 req/15 phút (AI generate)
 6. **Helmet + CORS** – bảo mật HTTP headers
 7. **Multer + Cloudinary** – upload file an toàn, lưu trữ cloud
-8. **Redis Caching** ⭐ – cache API responses (TTL configurable), invalidate on write, distributed rate limiting
 
 ---
 
@@ -203,8 +189,8 @@ server/
 | Prompt Engineering | System prompt riêng cho từng loại nội dung + tone + ngôn ngữ |
 | LangChain.js | Orchestrate model, prompt chaining, output parsing |
 | Streaming (SSE) | Server-Sent Events trả nội dung real-time |
-| RAG (Retrieval-Augmented Generation) ⭐ | Upload tài liệu → trích xuất text → tạo embeddings → lưu vào vector DB (Pinecone) → khi sinh nội dung, semantic search lấy context liên quan → đưa vào prompt AI → sinh nội dung chính xác dựa trên tài liệu tham khảo |
-| NLP Content Analytics ⭐ | Phân tích nội dung: readability score (Flesch-Kincaid, Coleman-Liau), sentiment analysis, keyword density, SEO score → đề xuất cải thiện |
+| | Upload tài liệu → trích xuất text → tạo embeddings → lưu vào vector DB (Pinecone) → khi sinh nội dung, semantic search lấy context liên quan → đưa vào prompt AI → sinh nội dung chính xác dựa trên tài liệu tham khảo |
+| | Phân tích nội dung: readability score (Flesch-Kincaid, Coleman-Liau), sentiment analysis, keyword density, SEO score → đề xuất cải thiện |
 | AI Plagiarism Detection ⭐ | So sánh nội dung bằng cosine similarity trên embeddings → phát hiện đoạn trùng lặp → cảnh báo nếu vượt ngưỡng |
 
 ---
@@ -225,14 +211,13 @@ server/
 + Chọn model (GPT-4 / Llama / fine-tuned), tone, ngôn ngữ, temperature
 + Streaming real-time (SSE) từ AI về client
 + CRUD nội dung, yêu thích, gắn tag, lịch sử phiên bản, xuất PDF/Word
-+ Redis caching cho API responses (giảm latency khi truy vấn nội dung)
 + API: `/api/content/*`
 + DB: Contents, UsageLogs
 
 ### Module 3 – Fine-tuning Model AI
 
 + Upload dataset (CSV/JSON) → Multer → Cloudinary
-+ Tạo job fine-tuning (OpenAI API hoặc Llama local) → BullMQ background job xử lý training
++ Tạo job fine-tuning (OpenAI API hoặc Llama local)
 + Theo dõi trạng thái: pending → training → completed/failed
 + Sử dụng model đã fine-tune khi sinh nội dung
 + API: `/api/fine-tune/*`
@@ -262,7 +247,7 @@ server/
 ### Module 7 – Thông Báo
 
 + Thông báo hệ thống, thanh toán, fine-tuning, tài khoản
-+ Gửi email thông báo qua BullMQ email queue (background processing)
++ Gửi email thông báo qua Nodemailer
 + Đánh dấu đã đọc / đọc tất cả
 + API: `/api/notifications/*`
 + DB: Notifications
@@ -281,7 +266,6 @@ server/
 
 + Dashboard: tổng user, nội dung, doanh thu, biểu đồ tăng trưởng
 + Quản lý: user, nội dung, template, danh mục, gói dịch vụ, thanh toán, model AI
-+ Bull Board: monitoring dashboard cho BullMQ background jobs
 + Cài đặt hệ thống, nhật ký audit log
 + API: `/api/admin/*`
 + DB: SystemSettings, AuditLogs
@@ -292,42 +276,12 @@ server/
 
 Các tính năng dưới đây là những thành phần **kỹ thuật khó**, thể hiện chiều sâu của đồ án:
 
-### 7.1 RAG – Retrieval-Augmented Generation
-
-+ **Vấn đề:** AI sinh nội dung chung chung, không dựa trên dữ liệu riêng → cần cơ chế cho AI "đọc" tài liệu tham khảo
-+ **Kiến trúc:** Document Upload → Text Extraction (pdf-parse, mammoth) → Chunking (500 tokens, overlap 100) → Embedding (OpenAI text-embedding-3-small) → Vector Store (Pinecone) → Query: Prompt → Embedding → Similarity Search (top-k=5) → Context Injection → LLM Generation
-+ **API:** `/api/rag/*` (upload documents, semantic search, RAG generation)
-+ **DB:** Documents, DocumentChunks + Pinecone (vector embeddings)
-
-### 7.2 NLP Content Analytics Pipeline
-
-+ **Vấn đề:** User không biết chất lượng nội dung AI → cần phân tích tự động và đề xuất cải thiện
-+ **Kiến trúc:** Content → Tokenization → Readability Scoring (Flesch-Kincaid, Coleman-Liau, Gunning Fog) → Sentiment Analysis → Keyword Extraction (TF-IDF) → SEO Scoring → AI Suggestions
-+ **API:** `/api/analytics/*` (readability, sentiment, keywords, SEO score, compare)
-+ **DB:** ContentAnalytics
-
-### 7.3 AI Plagiarism Detection System
+### 7.1 AI Plagiarism Detection System
 
 + **Vấn đề:** AI có thể sinh nội dung trùng lặp → cần phát hiện và cảnh báo
 + **Kiến trúc:** Content → Segmentation → Embedding → Cosine Similarity Search (database + web scraping) → Threshold Detection (>85%) → Report (highlight đoạn trùng, nguồn gốc, % tổng)
 + **API:** `/api/plagiarism/*` (check, check-web, history)
 + **DB:** PlagiarismReports
 
-### 7.4 Elasticsearch Full-text Search (Vietnamese Support)
 
-+ **Vấn đề:** MongoDB text search không hỗ trợ tốt tiếng Việt → cần search engine chuyên dụng
-+ **Kiến trúc:** MongoDB → BullMQ sync → Elasticsearch Index (ICU analyzer + Vietnamese tokenizer) → Search API (multi_match, completion suggester, aggregations, faceted search)
-+ **API:** `/api/search/*` (full-text search, auto-complete, faceted search)
-+ **DB:** SearchLogs + Elasticsearch indices
 
-### 7.5 Redis Caching & Background Jobs (BullMQ)
-
-+ **Vấn đề:** API calls tốn thời gian (AI, analytics, search) → cần caching + long-running tasks cần background processing
-+ **Kiến trúc:** Redis cache (TTL-based, write-through invalidation) + BullMQ job queues (embedding-queue, analytics-queue, fine-tune-queue, email-queue, search-sync-queue)
-+ **Công nghệ:** Redis 7.x, ioredis, BullMQ, Bull Board (monitoring)
-
-### 7.6 CI/CD Pipeline (GitHub Actions)
-
-+ **Vấn đề:** Manual deployment dễ lỗi → cần CI/CD pipeline tự động
-+ **Kiến trúc:** Push/PR → Lint (ESLint + Prettier) → Unit Tests (Jest) → Integration Tests → Build (Docker multi-stage) → Deploy (Vercel frontend, Docker backend)
-+ **Công nghệ:** GitHub Actions, Docker, Jest, ESLint, Vercel CLI
