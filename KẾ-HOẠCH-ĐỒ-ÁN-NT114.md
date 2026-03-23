@@ -60,17 +60,17 @@ ngành nghề cụ thể**
 
 ai-copywriter/
 
-├── client/ \# Frontend (Next.js)
+├── frontend/ \# Frontend (Next.js)
 
-├── server/ \# Backend (Express.js)
+├── backend/ \# Backend (Express.js)
 
 ├── docker-compose.yml
 
 └── README.md
 
-**2.2. Client (Frontend)**
+**2.2. Frontend**
 
-client/
+frontend/
 
 ├── public/ \# Tài nguyên tĩnh (favicon, images, fonts)
 
@@ -137,9 +137,9 @@ adminService, \...)
 
 └── yarn.lock \# Lock file (yarn)
 
-**2.3.Server(Backend)**
+**2.3. Backend**
 
-server/
+backend/
 
 ├── src/
 

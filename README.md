@@ -38,16 +38,16 @@
 
 ```
 ai-copywriter/
-├── client/                     # Frontend (Next.js)
-├── server/                     # Backend (Express.js)
+├── frontend/                     # Frontend (Next.js)
+├── backend/                     # Backend (Express.js)
 ├── docker-compose.yml
 └── README.md
 ```
 
-### 2.2. Client (Frontend)
+### 2.2. Frontend
 
 ```
-client/
+frontend/
 ├── public/                     # Tài nguyên tĩnh (favicon, images, fonts)
 ├── src/
 │   ├── app/                    # App Router – chứa tất cả các trang (routes)
@@ -78,10 +78,10 @@ client/
 └── yarn.lock                   # Lock file (yarn)
 ```
 
-### 2.3. Server (Backend)
+### 2.3. Backend
 
 ```
-server/
+backend/
 ├── src/
 │   ├── config/                 # Cấu hình ứng dụng (database, cloudinary, passport, ...)
 │   ├── models/                 # Mongoose schemas & models (User, Content, Template, ...)
