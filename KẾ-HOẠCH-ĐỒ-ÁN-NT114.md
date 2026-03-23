@@ -22,9 +22,9 @@ ngành nghề cụ thể**
   Axios              Bcrypt                    Docker + Docker    Fine-tuning
                                                Compose            
 
-  React Hook Form    Joi.dev                                      Streaming(SSE)
+  React Hook Form    Joi.dev                                                    
 
-  React Query        Regex                                        
+  React Query        Regex                                     Streaming(SSE)                                        
 
   React Markdown     JWT                                          
 
@@ -144,16 +144,16 @@ server/
 ├── src/
 
 │ ├── config/ \# Cấu hình ứng dụng (database, cloudinary, passport,
-redis, elasticsearch, \...)
+\...)
 
 │ ├── models/ \# Mongoose schemas & models (User, Content, Template,
 Document, \...)
 
 │ ├── routes/ \# Định nghĩa API routes (authRoutes, contentRoutes,
-ragRoutes, analyticsRoutes, \...)
+\...)
 
 │ ├── controllers/ \# Xử lý logic từng route (authController,
-contentController, ragController, \...)
+contentController, \...)
 
 │ ├── services/ \# Business logic (aiService, ragService, nlpService,
 plagiarismService, searchService, \...)
@@ -162,10 +162,8 @@ plagiarismService, searchService, \...)
 rateLimiter, cache, errorHandler)
 
 │ ├── validations/ \# Joi validation schemas (authValidation,
-contentValidation, ragValidation, \...)
+contentValidation, \...)
 
-│ ├── jobs/ \# BullMQ job processors (fineTuneJob, embeddingJob,
-analyticsJob, bulkGenerateJob)
 
 │ ├── socket/ \# Socket.io handlers (collaboration, notifications,
 presence)
@@ -173,7 +171,7 @@ presence)
 │ ├── utils/ \# Hàm tiện ích (regex patterns, email sender, token
 generator, \...)
 
-│ └── app.js \# Entry point -- khởi tạo Express, Redis, Elasticsearch,
+│ └── app.js \# Entry point -- khởi tạo Express,
 Socket.io, mount routes
 
 ├── uploads/ \# Thư mục tạm lưu file upload trước khi đẩy lên Cloudinary
@@ -259,21 +257,6 @@ Socket.io, mount routes
 
   /fine-tune          Quản lý fine-tuning
 
-  /knowledge-base     \[TÍNH NĂNG MỚI\] Upload tài liệu tham khảo
-                      (PDF/DOCX/TXT) → hệ thống trích xuất text → tạo
-                      embeddings → lưu vào vector database. Quản lý tài liệu:
-                      xem, xóa, tìm kiếm. Mỗi tài liệu hiển thị: số chunks,
-                      kích thước, ngày upload. Khi sinh nội dung, chọn
-                      Knowledge Base để AI tham chiếu tài liệu → RAG pipeline
-                      tự động truy vấn context liên quan
-
-  /analytics          \[TÍNH NĂNG MỚI\] Dashboard phân tích NLP cho nội dung:
-                      Readability Score (Flesch-Kincaid, Coleman-Liau index),
-                      Sentiment Analysis (biểu đồ positive/negative/neutral),
-                      Keyword Density (word cloud + bảng tần suất), SEO Score
-                      (meta analysis, heading structure, keyword optimization).
-                      So sánh chất lượng giữa các model AI. Đề xuất cải thiện
-                      nội dung bằng AI
 
   /plagiarism-check   \[TÍNH NĂNG MỚI\] Kiểm tra đạo văn nội dung: paste hoặc
                       chọn nội dung đã tạo → hệ thống tính cosine similarity
