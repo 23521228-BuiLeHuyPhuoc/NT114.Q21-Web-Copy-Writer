@@ -1,9 +1,6 @@
 # Nestjs specific
 /dist
-**/dist
-# Dependencies
 /node_modules
-**/node_modules
 /build
 /tmp
 
@@ -25,7 +22,3 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
-
-# Next.js
-.next
-out
