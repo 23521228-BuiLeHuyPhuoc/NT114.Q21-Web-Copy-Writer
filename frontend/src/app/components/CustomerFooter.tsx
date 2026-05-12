@@ -1,0 +1,129 @@
+import { Link } from 'react-router-dom';
+import {
+  Sparkles, LifeBuoy, FileText, Wand2, Brain,
+  CreditCard, Key, BookOpen, MessageCircle,
+  ExternalLink, Zap,
+} from 'lucide-react';
+
+const FOOTER_COLS = [
+  {
+    title: 'Công cụ',
+    links: [
+      { label: 'AI Generator',         href: '/generate',         icon: Wand2 },
+      { label: 'Fine-tuning Studio',   href: '/fine-tune',        icon: Brain },
+      { label: 'Mẫu Copy',             href: '/templates',        icon: FileText },
+      { label: 'Kiểm tra đạo văn',     href: '/plagiarism-check', icon: Zap },
+      { label: 'API Keys',             href: '/api-keys',         icon: Key },
+    ],
+  },
+  {
+    title: 'Tài khoản',
+    links: [
+      { label: 'Hồ sơ',           href: '/profile',      icon: null },
+      { label: 'Thanh toán',      href: '/billing',      icon: null },
+      { label: 'Gói dịch vụ',    href: '/subscription', icon: null },
+      { label: 'Thông báo',      href: '/notifications', icon: null },
+      { label: 'Dự án của tôi',  href: '/projects',     icon: null },
+    ],
+  },
+  {
+    title: 'Hỗ trợ',
+    links: [
+      { label: 'Trung tâm hỗ trợ', href: '/blog',    icon: LifeBuoy, external: false },
+      { label: 'Tài liệu API',     href: '/api-keys', icon: BookOpen, external: false },
+      { label: 'Cộng đồng',        href: '/blog',    icon: MessageCircle, external: false },
+      { label: 'Liên hệ',          href: '/contact', icon: null, external: false },
+    ],
+  },
+];
+
+const STATUS_SERVICES = [
+  { name: 'GPT-4o',          status: 'online' },
+  { name: 'Llama 3.1',       status: 'online' },
+  { name: 'Fine-tune Engine', status: 'busy'  },
+];
+
+export function CustomerFooter() {
+  return (
+    <footer className="bg-white border-t border-gray-100 mt-auto">
+      {/* Main footer content */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Brand + status */}
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/" className="flex items-center gap-2 mb-3 group">
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-1.5 rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
+                <Sparkles className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="font-bold text-gray-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>CopyPro</span>
+            </Link>
+            <p className="text-xs text-gray-500 leading-relaxed mb-4">
+              Nền tảng AI Copywriting hàng đầu Việt Nam, tích hợp GPT-4o, Llama 3.1 & Fine-tuning.
+            </p>
+
+            {/* System status */}
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Trạng thái hệ thống</p>
+              <div className="space-y-1.5">
+                {STATUS_SERVICES.map(s => (
+                  <div key={s.name} className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">{s.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${s.status === 'online' ? 'bg-green-500' : s.status === 'busy' ? 'bg-amber-500' : 'bg-red-500'} ${s.status === 'online' ? 'animate-pulse' : ''}`} />
+                      <span className={`text-[10px] font-medium ${s.status === 'online' ? 'text-green-600' : s.status === 'busy' ? 'text-amber-600' : 'text-red-600'}`}>
+                        {s.status === 'online' ? 'Online' : s.status === 'busy' ? 'Bận' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Links columns */}
+          {FOOTER_COLS.map(col => (
+            <div key={col.title}>
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">{col.title}</p>
+              <ul className="space-y-2">
+                {col.links.map(link => {
+                  const Icon = link.icon;
+                  return (
+                    <li key={link.label}>
+                      <Link
+                        to={link.href}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-green-600 transition-colors group"
+                      >
+                        {Icon && <Icon className="w-3 h-3 text-gray-400 group-hover:text-green-500 transition-colors flex-shrink-0" />}
+                        {link.label}
+                        {'external' in link && link.external && <ExternalLink className="w-2.5 h-2.5 text-gray-300" />}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-3 text-[11px] text-gray-400">
+            <span>© 2026 CopyPro Vietnam</span>
+            <span className="text-gray-200">·</span>
+            <Link to="#" className="hover:text-green-600 transition-colors">Điều khoản</Link>
+            <span className="text-gray-200">·</span>
+            <Link to="#" className="hover:text-green-600 transition-colors">Bảo mật</Link>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            <span>Tất cả dịch vụ hoạt động tốt</span>
+            <span className="text-gray-200">·</span>
+            <span>v2.0.1</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

@@ -1,0 +1,339 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import {
+  Shield, Eye, EyeOff, Mail, Lock, AlertTriangle,
+  BarChart3, Users, Brain, Activity, UserPlus,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const ADMIN_STATS = [
+  { icon: Users,    label: 'Tổng người dùng', value: '2,419' },
+  { icon: BarChart3, label: 'Copy tháng này', value: '124K' },
+  { icon: Brain,    label: 'Models đang chạy', value: '7' },
+  { icon: Activity, label: 'Uptime hệ thống',  value: '99.8%' },
+];
+
+interface AdminLoginFormData { email: string; password: string }
+
+export function AdminLoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [showPass, setShowPass] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AdminLoginFormData>({
+    defaultValues: { email: 'admin@copypro.vn', password: 'admin123' },
+  });
+
+  const onSubmit = async (data: AdminLoginFormData) => {
+    try {
+      await login(data.email, data.password);
+      toast.success('Chào mừng trở lại, Admin!');
+      navigate('/admin');
+    } catch (err: any) {
+      if (err.message === '__PENDING__') {
+        setPendingEmail(data.email);
+      } else {
+        toast.error(err.message || 'Sai thông tin đăng nhập hoặc không có quyền Admin.');
+      }
+    }
+  };
+
+  // ── Pending approval screen ────────────────────────────────────
+  if (pendingEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 px-5">
+        <div className="text-center max-w-sm">
+          {/* Icon */}
+          <div className="relative w-24 h-24 mx-auto mb-7">
+            <div className="absolute inset-0 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin" style={{ animationDuration: '2.5s' }} />
+            <div className="absolute inset-3 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <div className="w-11 h-11 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-900/50">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.3" />
+                  <path strokeLinecap="round" d="M12 6v6l4 2" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="inline-flex items-center gap-2 bg-amber-950/50 border border-amber-700/40 rounded-full px-4 py-1.5 mb-5">
+            <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
+            <span className="text-amber-400 text-xs font-semibold">Tài khoản đang chờ duyệt</span>
+          </div>
+
+          <h2 className="text-white mb-3">Chưa được phê duyệt</h2>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            Tài khoản <span className="text-green-400 font-semibold">{pendingEmail}</span> đã đăng ký thành công nhưng chưa được Super Admin phê duyệt.
+          </p>
+
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 text-left space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <p className="text-sm text-white">Đăng ký thành công</p>
+            </div>
+            <div className="ml-3 w-px h-3 bg-gray-700" />
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-amber-500/20 border-2 border-amber-500 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                <div className="w-2 h-2 bg-amber-400 rounded-full" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-300">Chờ Super Admin duyệt</p>
+                <p className="text-xs text-gray-600">Có thể mất 24–48 giờ</p>
+              </div>
+            </div>
+            <div className="ml-3 w-px h-3 bg-gray-800" />
+            <div className="flex items-center gap-3 opacity-40">
+              <div className="w-6 h-6 bg-gray-800 border-2 border-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                <Shield className="w-3 h-3 text-gray-600" />
+              </div>
+              <p className="text-sm text-gray-400">Kích hoạt & đăng nhập</p>
+            </div>
+          </div>
+
+          <p className="text-gray-600 text-xs mb-6">
+            Liên hệ <span className="text-gray-400">admin@copypro.vn</span> để được hỗ trợ nhanh hơn.
+          </p>
+
+          <button
+            onClick={() => setPendingEmail(null)}
+            className="w-full h-11 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-900 rounded-xl font-semibold text-sm transition-all"
+          >
+            ← Quay lại đăng nhập
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex bg-gray-950">
+
+      {/* ── LEFT: System Panel ── */}
+      <div className="hidden lg:flex lg:w-[52%] flex-col relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-green-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_20%_50%,rgba(34,197,94,0.08),transparent)]" />
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(34,197,94,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.6) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-green-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-60 h-60 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Logo bar */}
+        <div className="relative p-10 flex items-center gap-3 border-b border-white/5">
+          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-900/40">
+            <Shield className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <span className="text-white font-bold text-lg tracking-tight">CopyPro</span>
+            <span className="ml-2 text-xs bg-green-900/60 text-green-300 border border-green-700/40 rounded px-2 py-0.5">Admin Console</span>
+          </div>
+        </div>
+
+        {/* Main */}
+        <div className="relative flex-1 flex flex-col justify-center px-12 xl:px-16">
+          <p className="text-green-500 text-xs font-bold uppercase tracking-[0.2em] mb-4">Hệ thống quản trị</p>
+          <h2 className="text-white mb-4 leading-tight">
+            Trung tâm điều hành
+            <br />
+            <span className="text-green-400">CopyPro Platform</span>
+          </h2>
+          <p className="text-gray-500 text-sm leading-relaxed mb-10">
+            Quản lý toàn bộ người dùng, mô hình AI, templates, analytics và cấu hình hệ thống từ một nơi duy nhất.
+          </p>
+
+          {/* Live Stats Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            {ADMIN_STATS.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="bg-white/4 border border-white/8 rounded-2xl p-4 hover:bg-white/6 transition-colors">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="w-3.5 h-3.5 text-green-500" />
+                    <span className="text-gray-500 text-xs">{s.label}</span>
+                  </div>
+                  <p className="text-white text-xl font-bold tracking-tight">{s.value}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* System status */}
+          <div className="bg-green-950/60 border border-green-800/40 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Trạng thái hệ thống</span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { name: 'GPT-4o API', status: 'Online', dot: 'bg-green-400' },
+                { name: 'Llama 3.1 Server', status: 'Online', dot: 'bg-green-400' },
+                { name: 'Fine-tuning Engine', status: 'Đang xử lý 2 jobs', dot: 'bg-yellow-400' },
+              ].map(item => (
+                <div key={item.name} className="flex items-center justify-between">
+                  <span className="text-gray-400 text-xs">{item.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
+                    <span className="text-xs text-gray-300 font-medium">{item.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="relative px-12 xl:px-16 pb-10 pt-6 border-t border-white/5">
+          <p className="text-gray-600 text-xs">
+            CopyPro Admin Console v2.0 · Chỉ dành cho nhân viên được ủy quyền
+          </p>
+        </div>
+      </div>
+
+      {/* ── RIGHT: Login Form ── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-gray-950">
+        {/* Mobile logo */}
+        <div className="lg:hidden mb-10 flex items-center gap-2.5">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-xl">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <span className="text-white font-bold text-lg">CopyPro</span>
+            <span className="ml-2 text-xs bg-green-900/60 text-green-300 border border-green-700/40 rounded px-2 py-0.5">Admin</span>
+          </div>
+        </div>
+
+        <div className="w-full max-w-[380px]">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 mb-5">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <span className="text-amber-500 text-xs font-semibold">Khu vực giới hạn</span>
+            </div>
+            <h2 className="text-white mb-1.5 leading-tight">Đăng nhập Admin</h2>
+            <p className="text-gray-500 text-sm">
+              Chỉ dành cho nhân viên CopyPro được ủy quyền.
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <Label className="text-gray-400 mb-2 block text-xs uppercase tracking-wider">Email Admin</Label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                <Input
+                  type="email"
+                  placeholder="admin@copypro.vn"
+                  {...register('email', {
+                    required: 'Email là bắt buộc',
+                    pattern: { value: /^\S+@\S+$/, message: 'Email không hợp lệ' },
+                  })}
+                  className="pl-10 h-12 rounded-xl bg-gray-900 border-gray-700 text-white placeholder:text-gray-600 focus:border-green-500 focus:bg-gray-800"
+                />
+              </div>
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <Label className="text-gray-400 mb-2 block text-xs uppercase tracking-wider">Mật khẩu</Label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                <Input
+                  type={showPass ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('password', { required: 'Mật khẩu là bắt buộc' })}
+                  className="pl-10 pr-10 h-12 rounded-xl bg-gray-900 border-gray-700 text-white placeholder:text-gray-600 focus:border-green-500 focus:bg-gray-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition-all shadow-xl shadow-green-900/40 mt-2 flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Đang xác thực...
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4" />
+                  Truy cập Admin Console
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Demo hint */}
+          <div className="mt-6 bg-green-950/40 border border-green-800/40 rounded-xl p-4">
+            <p className="text-green-400 text-xs font-bold mb-2 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" /> Demo credentials
+            </p>
+            <p className="text-gray-500 text-xs font-mono">admin@copypro.vn / admin123</p>
+          </div>
+
+          {/* Register link */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-800" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-gray-950 px-3 text-xs text-gray-600">Chưa có tài khoản?</span>
+            </div>
+          </div>
+
+          <Link to="/admin/register">
+            <button className="w-full h-11 border border-green-800/60 hover:border-green-600 text-green-400 hover:text-green-300 rounded-xl font-semibold text-sm transition-all hover:bg-green-950/40 flex items-center justify-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              Đăng ký tài khoản Admin mới
+            </button>
+          </Link>
+
+          <div className="relative mt-4 mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-800" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-gray-950 px-3 text-xs text-gray-600">Không phải Admin?</span>
+            </div>
+          </div>
+
+          <Link to="/login">
+            <button className="w-full h-11 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-gray-200 rounded-xl font-semibold text-sm transition-all hover:bg-gray-900">
+              → Trang đăng nhập người dùng
+            </button>
+          </Link>
+
+          <p className="text-center text-xs text-gray-700 mt-6">
+            © 2026 CopyPro Vietnam · Hệ thống nội bộ
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

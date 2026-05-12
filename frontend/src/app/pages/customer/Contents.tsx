@@ -1,0 +1,140 @@
+import { useState } from 'react';
+import { Layout } from '@/app/components/Layout';
+import { Card } from '@/app/components/ui/card';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Badge } from '@/app/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { useNavigate } from 'react-router-dom';
+import {
+  Search, FileText, Eye, Copy, Trash2, Download, Plus,
+  Calendar, Sparkles, Clock, Filter, MoreHorizontal, Star,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+import { CONTENTS_STATUS_MAP as STATUS_MAP } from '@/mocks/contents';
+import { useContents } from '@/hooks/queries/useContents';
+
+export function CustomerContents() {
+  const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterType, setFilterType] = useState('all');
+  const { data: contents = [] } = useContents();
+
+  const filtered = contents.filter(c => {
+    const matchSearch = c.title.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === 'all' || c.status === filterStatus;
+    const matchType = filterType === 'all' || c.type === filterType;
+    return matchSearch && matchStatus && matchType;
+  });
+
+  return (
+    <Layout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">Quản Lý Nội Dung</h1>
+            <p className="text-gray-600">Tất cả copy AI bạn đã tạo — tìm kiếm, lọc và quản lý dễ dàng</p>
+          </div>
+          <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white" onClick={() => navigate('/generate')}>
+            <Plus className="w-4 h-4 mr-2" /> Tạo Nội Dung Mới
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {[
+            { label: 'Tổng nội dung', value: contents.length, icon: FileText, color: 'text-green-600 bg-green-50' },
+            { label: 'Đã xuất bản', value: contents.filter(c => c.status === 'published').length, icon: Star, color: 'text-blue-600 bg-blue-50' },
+            { label: 'Bản nháp', value: contents.filter(c => c.status === 'draft').length, icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
+            { label: 'Chất lượng TB', value: (contents.length ? Math.round(contents.reduce((a, c) => a + c.quality, 0) / contents.length) : 0) + '%', icon: Sparkles, color: 'text-emerald-600 bg-emerald-50' },
+          ].map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <Card key={i} className="p-4 flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${s.color}`}><Icon className="w-4 h-4" /></div>
+                <div>
+                  <p className="text-xl font-bold text-gray-900">{s.value}</p>
+                  <p className="text-xs text-gray-500">{s.label}</p>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Filters */}
+        <Card className="p-4 mb-6">
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-48">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input placeholder="Tìm kiếm nội dung..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="published">Đã xuất bản</SelectItem>
+                <SelectItem value="draft">Nháp</SelectItem>
+                <SelectItem value="archived">Lưu trữ</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Loại copy" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả loại</SelectItem>
+                <SelectItem value="headline">Tiêu đề</SelectItem>
+                <SelectItem value="description">Mô tả</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="social">Social</SelectItem>
+                <SelectItem value="landing">Landing Page</SelectItem>
+                <SelectItem value="seo">SEO</SelectItem>
+                <SelectItem value="cta">CTA</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+
+        {/* Content list */}
+        <div className="space-y-3">
+          {filtered.length === 0 && (
+            <div className="text-center py-16 text-gray-400">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>Không tìm thấy nội dung phù hợp</p>
+            </div>
+          )}
+          {filtered.map(item => {
+            const status = STATUS_MAP[item.status];
+            return (
+              <Card key={item.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/contents/${item.id}`)}>
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <Badge className={`${status.color} border-0 text-xs`}>{status.label}</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">{item.type}</Badge>
+                      <Badge className="bg-green-100 text-green-700 border-0 text-xs">{item.model}</Badge>
+                      <Badge className="bg-emerald-50 text-emerald-700 border-0 text-xs">⭐ {item.quality}%</Badge>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+                      <span><Calendar className="w-3 h-3 inline mr-1" />{item.createdAt}</span>
+                      <span>{item.words} từ</span>
+                      <span>{item.industry}</span>
+                      {item.project && <span className="text-green-600">{item.project}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/contents/${item.id}`)}><Eye className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(item.title); toast.success('Đã sao chép!'); }}><Copy className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm"><Download className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" className="text-red-500"><Trash2 className="w-4 h-4" /></Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </Layout>
+  );
+}

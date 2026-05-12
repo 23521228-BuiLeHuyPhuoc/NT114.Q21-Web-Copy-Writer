@@ -1,0 +1,247 @@
+import { useState, useRef, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { Avatar, AvatarFallback } from '@/app/components/ui/avatar';
+import { Badge } from '@/app/components/ui/badge';
+import {
+  Bell, Search, Wand2, ChevronDown, User, CreditCard,
+  Settings, LogOut, Crown, HelpCircle, X,
+} from 'lucide-react';
+import { BREADCRUMB_MAP, QUICK_ACTIONS } from '@/mocks/customerHeader';
+import { useHeaderNotifications } from '@/hooks/queries/useNotifications';
+
+export function CustomerHeader() {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const { data: headerNotifications } = useHeaderNotifications();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchVal, setSearchVal] = useState('');
+  const [notiOpen, setNotiOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NonNullable<typeof headerNotifications>>([] as any);
+  useEffect(() => { if (headerNotifications) setNotifications(headerNotifications); }, [headerNotifications]);
+
+  const notiRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
+
+  const unread = notifications.filter(n => !n.read).length;
+  const pageTitle = BREADCRUMB_MAP[location.pathname] || 'CopyPro';
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notiRef.current && !notiRef.current.contains(e.target as Node)) setNotiOpen(false);
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Close on route change
+  useEffect(() => {
+    setNotiOpen(false);
+    setUserOpen(false);
+    setSearchOpen(false);
+  }, [location.pathname]);
+
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const handleLogout = () => { logout(); navigate('/login'); };
+
+  return (
+    <header className="h-[60px] bg-white border-b border-gray-100 flex items-center px-4 lg:px-6 gap-3 sticky top-0 z-30 flex-shrink-0">
+      {/* Left: Page title + breadcrumb */}
+      <div className="flex-1 min-w-0 hidden md:flex items-center gap-2">
+        <Link to="/" className="text-xs text-gray-400 hover:text-green-600 transition-colors shrink-0">CopyPro</Link>
+        <span className="text-gray-300 text-xs">/</span>
+        <span className="text-sm font-semibold text-gray-800 truncate">{pageTitle}</span>
+      </div>
+
+      {/* Center (mobile): page title */}
+      <div className="flex-1 md:hidden text-sm font-semibold text-gray-800 truncate">{pageTitle}</div>
+
+      {/* Right group */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+
+        {/* Search */}
+        {searchOpen ? (
+          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 h-9 w-64 transition-all">
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input
+              autoFocus
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              placeholder="Tìm nội dung, template..."
+              className="flex-1 bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
+              onKeyDown={e => e.key === 'Escape' && setSearchOpen(false)}
+            />
+            <button onClick={() => { setSearchOpen(false); setSearchVal(''); }}>
+              <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600 transition-colors" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Quick create button */}
+        <button
+          onClick={() => navigate('/generate')}
+          className="hidden sm:flex items-center gap-1.5 h-9 px-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-green-200"
+        >
+          <Wand2 className="w-3.5 h-3.5" />
+          Tạo copy
+        </button>
+
+        {/* Notifications */}
+        <div className="relative" ref={notiRef}>
+          <button
+            onClick={() => { setNotiOpen(!notiOpen); setUserOpen(false); }}
+            className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <Bell className="w-4 h-4" />
+            {unread > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
+            )}
+          </button>
+
+          {notiOpen && (
+            <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b">
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-sm text-gray-900">Thông báo</p>
+                  {unread > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">{unread} mới</span>
+                  )}
+                </div>
+                {unread > 0 && (
+                  <button onClick={markAllRead} className="text-xs text-green-600 hover:text-green-700 font-semibold transition-colors">
+                    Đọc tất cả
+                  </button>
+                )}
+              </div>
+              <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                {notifications.map(n => {
+                  const Icon = n.icon;
+                  return (
+                    <button
+                      key={n.id}
+                      onClick={() => setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))}
+                      className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left ${!n.read ? 'bg-green-50/40' : ''}`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${n.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm truncate ${!n.read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>{n.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{n.desc}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{n.time} trước</p>
+                      </div>
+                      {!n.read && <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="border-t px-4 py-2.5">
+                <Link to="/notifications" onClick={() => setNotiOpen(false)} className="text-xs text-green-600 hover:text-green-700 font-semibold transition-colors">
+                  Xem tất cả thông báo →
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User avatar dropdown */}
+        <div className="relative" ref={userRef}>
+          <button
+            onClick={() => { setUserOpen(!userOpen); setNotiOpen(false); }}
+            className="flex items-center gap-2 h-9 pl-1 pr-2 rounded-xl hover:bg-gray-100 transition-colors"
+          >
+            <Avatar className="w-7 h-7">
+              <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-600 text-white text-xs font-bold">
+                {user?.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden sm:block text-sm font-semibold text-gray-700 max-w-24 truncate">{user?.name.split(' ')[0]}</span>
+            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${userOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {userOpen && (
+            <div className="absolute top-full right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+              {/* User info */}
+              <div className="px-4 py-4 border-b bg-gradient-to-br from-green-50 to-emerald-50">
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-10 h-10">
+                    <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold">
+                      {user?.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-gray-900 truncate">{user?.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    <Badge className="bg-green-100 text-green-700 border-0 text-[10px] mt-1 px-1.5 py-0 h-4">
+                      <Crown className="w-2.5 h-2.5 mr-1" /> Pro
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick actions */}
+              <div className="p-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1.5">Truy cập nhanh</p>
+                <div className="grid grid-cols-5 gap-1 mb-2">
+                  {QUICK_ACTIONS.map(a => {
+                    const Icon = a.icon;
+                    return (
+                      <Link key={a.path} to={a.path} onClick={() => setUserOpen(false)}
+                        className="flex flex-col items-center gap-1 p-1.5 rounded-lg hover:bg-gray-50 transition-colors group">
+                        <div className={`w-7 h-7 ${a.color} rounded-lg flex items-center justify-center`}>
+                          <Icon className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <span className="text-[9px] text-gray-500 text-center leading-tight">{a.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-t p-2 space-y-0.5">
+                {[
+                  { icon: User,       label: 'Hồ sơ',        path: '/profile' },
+                  { icon: CreditCard, label: 'Thanh toán',   path: '/billing' },
+                  { icon: Crown,      label: 'Nâng gói',     path: '/subscription' },
+                  { icon: Settings,   label: 'Cài đặt',      path: '/profile' },
+                  { icon: HelpCircle, label: 'Hỗ trợ',       path: '/contact' },
+                ].map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <Link key={item.path + item.label} to={item.path} onClick={() => setUserOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors group">
+                      <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-green-600 transition-colors" />
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900 font-medium transition-colors">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="border-t p-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-50 transition-colors group"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors">Đăng xuất</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
