@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api } from '@/lib/axios';
 import {
   ADMIN_INVITE_CODE,
   type RegisterData,
@@ -7,19 +8,36 @@ import {
   type UserStatus,
 } from '@/types/auth';
 
+type AccountType = 'user' | 'admin';
+
+interface AuthApiResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    token?: string;
+    user?: User;
+  };
+}
+
 const INITIAL_MOCK_USERS: StoredUser[] = [
-  { id: '1', email: 'admin@copypro.vn',    password: 'admin123',    name: 'Admin CopyPro',     role: 'admin',    adminRole: 'super_admin',     status: 'active',  createdAt: '2025-01-01' },
-  { id: '2', email: 'customer@copypro.vn', password: 'customer123', name: 'Nguyễn Văn A',      role: 'customer',                              status: 'active',  createdAt: '2025-03-01' },
-  { id: '3', email: 'content@copypro.vn',  password: 'content123',  name: 'Trần Thị Content',  role: 'admin',    adminRole: 'content_manager', status: 'active',  createdAt: '2025-06-01' },
-  { id: '4', email: 'users@copypro.vn',    password: 'users123',    name: 'Lê Văn User',       role: 'admin',    adminRole: 'user_manager',    status: 'active',  createdAt: '2025-06-01' },
-  { id: '5', email: 'finance@copypro.vn',  password: 'finance123',  name: 'Phạm Thị Finance',  role: 'admin',    adminRole: 'finance_manager', status: 'active',  createdAt: '2025-06-01' },
-  { id: '6', email: 'ai@copypro.vn',       password: 'ai123',       name: 'Hoàng Văn AI',      role: 'admin',    adminRole: 'ai_engineer',     status: 'active',  createdAt: '2025-06-01' },
-  { id: '7', email: 'analyst@copypro.vn',  password: 'analyst123',  name: 'Ngô Thị Analyst',   role: 'admin',    adminRole: 'analyst',         status: 'active',  createdAt: '2025-06-01' },
-  { id: '8', email: 'pending1@copypro.vn', password: 'pending123',  name: 'Vũ Thị Pending',    role: 'admin',    adminRole: 'content_manager', status: 'pending', createdAt: '2026-03-20' },
-  { id: '9', email: 'pending2@copypro.vn', password: 'pending123',  name: 'Đặng Văn Chờ',      role: 'admin',    adminRole: 'analyst',         status: 'pending', createdAt: '2026-03-22' },
+  { id: '1', email: 'admin@copypro.vn', password: 'admin123', name: 'Demo Admin', role: 'admin', adminRole: 'super_admin', status: 'active', createdAt: '2025-01-01' },
+  { id: '2', email: 'customer@copypro.vn', password: 'customer123', name: 'Demo Customer', role: 'customer', status: 'active', createdAt: '2025-03-01' },
+  { id: '3', email: 'content@copypro.vn', password: 'content123', name: 'Content Manager', role: 'admin', adminRole: 'content_manager', status: 'active', createdAt: '2025-06-01' },
+  { id: '4', email: 'users@copypro.vn', password: 'users123', name: 'User Manager', role: 'admin', adminRole: 'user_manager', status: 'active', createdAt: '2025-06-01' },
+  { id: '5', email: 'finance@copypro.vn', password: 'finance123', name: 'Finance Manager', role: 'admin', adminRole: 'finance_manager', status: 'active', createdAt: '2025-06-01' },
+  { id: '6', email: 'ai@copypro.vn', password: 'ai123', name: 'AI Engineer', role: 'admin', adminRole: 'ai_engineer', status: 'active', createdAt: '2025-06-01' },
+  { id: '7', email: 'analyst@copypro.vn', password: 'analyst123', name: 'Analyst', role: 'admin', adminRole: 'analyst', status: 'active', createdAt: '2025-06-01' },
+  { id: '8', email: 'pending1@copypro.vn', password: 'pending123', name: 'Pending Admin 1', role: 'admin', adminRole: 'content_manager', status: 'pending', createdAt: '2026-03-20' },
+  { id: '9', email: 'pending2@copypro.vn', password: 'pending123', name: 'Pending Admin 2', role: 'admin', adminRole: 'analyst', status: 'pending', createdAt: '2026-03-22' },
 ];
 
+function canUseStorage() {
+  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+}
+
 function getStoredUsers(): StoredUser[] {
+  if (!canUseStorage()) return [...INITIAL_MOCK_USERS];
+
   try {
     const raw = localStorage.getItem('mock_users');
     return raw ? JSON.parse(raw) : [...INITIAL_MOCK_USERS];
@@ -29,16 +47,38 @@ function getStoredUsers(): StoredUser[] {
 }
 
 function saveStoredUsers(users: StoredUser[]) {
-  localStorage.setItem('mock_users', JSON.stringify(users));
+  if (canUseStorage()) {
+    localStorage.setItem('mock_users', JSON.stringify(users));
+  }
+}
+
+function saveSession(token: string, user: User) {
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+}
+
+function clearSession() {
+  if (!canUseStorage()) return;
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user');
+}
+
+function accountTypeFromUser(user: User | null): AccountType {
+  return user?.role === 'admin' ? 'admin' : 'user';
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  const err = error as { response?: { data?: { message?: string } }; message?: string };
+  return err.response?.data?.message || err.message || fallback;
 }
 
 interface AuthState {
   user: User | null;
   isLoading: boolean;
-  hydrate: () => void;
-  login: (email: string, password: string) => Promise<void>;
+  hydrate: () => Promise<void>;
+  login: (email: string, password: string, accountType?: AccountType) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   addUser: (data: Omit<StoredUser, 'id' | 'createdAt'> & { createdAt?: string }) => StoredUser;
   approveAdmin: (id: string) => void;
   rejectAdmin: (id: string) => void;
@@ -47,65 +87,114 @@ interface AuthState {
   getAllUsers: () => StoredUser[];
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
 
-  hydrate: () => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) set({ user: JSON.parse(savedUser) });
+  hydrate: async () => {
+    if (!canUseStorage()) {
+      set({ isLoading: false });
+      return;
+    }
+
     if (!localStorage.getItem('mock_users')) {
       saveStoredUsers(INITIAL_MOCK_USERS);
     }
-    set({ isLoading: false });
+
+    const token = localStorage.getItem('auth_token');
+    const savedUserRaw = localStorage.getItem('user');
+
+    if (!token || !savedUserRaw) {
+      clearSession();
+      set({ user: null, isLoading: false });
+      return;
+    }
+
+    try {
+      const savedUser = JSON.parse(savedUserRaw) as User;
+      const accountType = accountTypeFromUser(savedUser);
+      const response = await api.get<AuthApiResponse>(`/auth/${accountType}/me`);
+      const hydratedUser = response.data.data?.user;
+
+      if (!hydratedUser) {
+        throw new Error('Invalid auth response');
+      }
+
+      localStorage.setItem('user', JSON.stringify(hydratedUser));
+      set({ user: hydratedUser, isLoading: false });
+    } catch {
+      clearSession();
+      set({ user: null, isLoading: false });
+    }
   },
 
-  login: async (email, password) => {
-    await new Promise((r) => setTimeout(r, 500));
-    const users = getStoredUsers();
-    const found = users.find((u) => u.email === email && u.password === password);
-    if (!found) throw new Error('Email hoặc mật khẩu không đúng');
-    if (found.status === 'pending') throw new Error('__PENDING__');
-    if (found.status === 'rejected') {
-      throw new Error('Tài khoản của bạn đã bị từ chối. Vui lòng liên hệ quản trị viên.');
+  login: async (email, password, accountType = 'user') => {
+    try {
+      const response = await api.post<AuthApiResponse>(`/auth/${accountType}/login`, {
+        email,
+        password,
+      });
+
+      const token = response.data.data?.token;
+      const user = response.data.data?.user;
+
+      if (!token || !user) {
+        throw new Error('Invalid auth response');
+      }
+
+      saveSession(token, user);
+      set({ user });
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Email hoac mat khau khong dung'));
     }
-    const { password: _, ...rest } = found;
-    const loggedIn = rest as User;
-    set({ user: loggedIn });
-    localStorage.setItem('user', JSON.stringify(loggedIn));
   },
 
   register: async (data) => {
-    await new Promise((r) => setTimeout(r, 600));
-    if (data.role === 'admin') {
-      if (!data.inviteCode || data.inviteCode.trim().toUpperCase() !== ADMIN_INVITE_CODE) {
-        throw new Error('Mã mời admin không hợp lệ');
-      }
+    const accountType: AccountType = data.role === 'admin' ? 'admin' : 'user';
+    const payload = accountType === 'admin'
+      ? {
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          adminRole: data.adminRole,
+          inviteCode: data.inviteCode,
+        }
+      : {
+          name: data.name,
+          email: data.email,
+          password: data.password,
+        };
+
+    try {
+      await api.post<AuthApiResponse>(`/auth/${accountType}/register`, payload);
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Dang ky that bai'));
     }
-    const users = getStoredUsers();
-    if (users.find((u) => u.email === data.email)) throw new Error('Email này đã được sử dụng');
-    const newUser: StoredUser = {
-      id: Date.now().toString(),
-      email: data.email,
-      password: data.password,
-      name: data.name,
-      role: data.role,
-      status: data.role === 'admin' ? 'pending' : 'active',
-      ...(data.role === 'admin' && { adminRole: data.adminRole || 'analyst' }),
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    saveStoredUsers([...users, newUser]);
   },
 
-  logout: () => {
+  logout: async () => {
+    const currentUser = get().user;
+    const accountType = accountTypeFromUser(currentUser);
+    const token = canUseStorage() ? localStorage.getItem('auth_token') : null;
+
+    clearSession();
     set({ user: null });
-    localStorage.removeItem('user');
+
+    try {
+      if (token) {
+        await api.post(`/auth/${accountType}/logout`, undefined, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      // Local logout must always finish even if the backend is unreachable.
+    }
   },
 
   addUser: (data) => {
     const users = getStoredUsers();
     if (users.find((u) => u.email === data.email)) {
-      throw new Error('Email này đã được sử dụng');
+      throw new Error('Email nay da duoc su dung');
     }
 
     const newUser: StoredUser = {
@@ -132,7 +221,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const nextUsers = users.map((u) => (u.id === id ? { ...u, ...updates } : u));
     saveStoredUsers(nextUsers);
 
-    const currentRaw = localStorage.getItem('user');
+    const currentRaw = canUseStorage() ? localStorage.getItem('user') : null;
     if (currentRaw) {
       const current = JSON.parse(currentRaw) as User;
       if (current.id === id) {

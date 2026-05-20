@@ -20,8 +20,8 @@ export function useSession(): Session {
   return { user, status };
 }
 
-export async function signIn(email: string, password: string) {
-  return useAuthStore.getState().login(email, password);
+export async function signIn(email: string, password: string, accountType: 'user' | 'admin' = 'user') {
+  return useAuthStore.getState().login(email, password, accountType);
 }
 
 export async function signUp(data: RegisterData) {

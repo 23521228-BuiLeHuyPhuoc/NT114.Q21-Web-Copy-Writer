@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { api } from '@/lib/axios';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { BrandLogo } from '@/app/components/BrandLogo';
@@ -48,6 +49,7 @@ export function AdminForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const emailForm = useForm<EmailFormData>({ defaultValues: { email: 'admin@copypro.vn' } });
   const resetForm = useForm<ResetFormData>({ defaultValues: { newPass: '', confirmPass: '' } });
@@ -57,10 +59,16 @@ export function AdminForgotPasswordPage() {
 
   const handleSendOtp = async (data: EmailFormData) => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setIsLoading(false);
-    toast.success(`Mã OTP admin đã gửi đến ${data.email}`);
-    setStep('otp');
+    try {
+      const response = await api.post('/auth/admin/forgot-password', { email: data.email });
+      setDevOtp(response.data?.data?.devOtp || null);
+      toast.success(`Mã OTP admin đã gửi đến ${data.email}`);
+      setStep('otp');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không gửi được OTP admin');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -71,22 +79,30 @@ export function AdminForgotPasswordPage() {
     }
 
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    setIsLoading(false);
-
-    if (code === '123456') {
+    try {
+      await api.post('/auth/admin/verify-otp', { email, otp: code });
       setStep('reset');
-      return;
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Mã OTP không đúng hoặc đã hết hạn');
+    } finally {
+      setIsLoading(false);
     }
-
-    toast.error('Mã OTP không đúng. Demo: 123456');
   };
 
-  const handleReset = async () => {
+  const handleReset = async (data: ResetFormData) => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setIsLoading(false);
-    setStep('done');
+    try {
+      await api.post('/auth/admin/reset-password', {
+        email,
+        otp: otp.join(''),
+        newPassword: data.newPass,
+      });
+      setStep('done');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không đặt lại được mật khẩu admin');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOtpChange = (value: string, index: number) => {
@@ -100,11 +116,14 @@ export function AdminForgotPasswordPage() {
   };
 
   const resendOtp = async () => {
+    const currentEmail = emailForm.getValues('email');
+    if (!currentEmail) {
+      toast.error('Vui lòng nhập email admin trước');
+      return;
+    }
+
     setOtp(['', '', '', '', '', '']);
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setIsLoading(false);
-    toast.success('Đã gửi lại OTP admin. Demo: 123456');
+    await handleSendOtp({ email: currentEmail });
   };
 
   return (
@@ -169,7 +188,7 @@ export function AdminForgotPasswordPage() {
               </button>
 
               <div className="bg-cyan-950/35 border border-cyan-800/40 rounded-xl p-3 text-xs text-cyan-200 text-center">
-                MVP demo: OTP admin là <strong>123456</strong> và sẽ hết hạn sau 5 phút khi nối API thật.
+                Dev demo: backend sẽ trả OTP admin trong response khi không phải production.
               </div>
             </form>
           )}
@@ -217,6 +236,11 @@ export function AdminForgotPasswordPage() {
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã OTP
               </button>
+              {devOtp && (
+                <div className="bg-amber-950/40 border border-amber-700/40 rounded-xl p-3 text-xs text-amber-200 text-center">
+                  OTP dev admin: <strong>{devOtp}</strong>
+                </div>
+              )}
             </div>
           )}
 
@@ -271,7 +295,7 @@ export function AdminForgotPasswordPage() {
           {step === 'done' && (
             <div className="space-y-4 text-center">
               <div className="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-4 text-sm text-emerald-200">
-                Mật khẩu admin đã được cập nhật trong luồng demo.
+                Mật khẩu admin đã được cập nhật.
               </div>
               <button
                 type="button"

@@ -1,4 +1,4 @@
-const createError = require('../utils/createError');
+const createError = require('../../utils/createError');
 
 function normalizeSchemas(schema, property) {
   if (schema && (schema.body || schema.query || schema.params)) {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Badge } from '@/app/components/ui/badge';
@@ -24,13 +25,14 @@ interface RegisterFormData { name: string; email: string; password: string; conf
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { register: registerAccount } = useAuth();
   const [step, setStep] = useState(1);
   const [showPass, setShowPass] = useState(false);
   const [plan, setPlan] = useState('pro');
   const [isLoading, setIsLoading] = useState(false);
 
   const {
-    register,
+    register: registerField,
     handleSubmit: rhfHandleSubmit,
     watch,
     formState: { errors },
@@ -43,11 +45,22 @@ export function RegisterPage() {
   };
 
   const handleFinalSubmit = async () => {
+    const values = watch();
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setIsLoading(false);
-    toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-    navigate('/login');
+    try {
+      await registerAccount({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        role: 'customer',
+      });
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      navigate('/login');
+    } catch (err: any) {
+      toast.error(err.message || 'Đăng ký thất bại');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -131,7 +144,7 @@ export function RegisterPage() {
                   <Label className="text-gray-700 mb-2 block">Họ và tên</Label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input placeholder="Nguyễn Văn A" {...register('name', { required: 'Họ và tên là bắt buộc' })} className="pl-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
+                    <Input placeholder="Nguyễn Văn A" {...registerField('name', { required: 'Họ và tên là bắt buộc' })} className="pl-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
                   </div>
                   {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
                 </div>
@@ -139,7 +152,7 @@ export function RegisterPage() {
                   <Label className="text-gray-700 mb-2 block">Email công ty / cá nhân</Label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input type="email" placeholder="your@email.com" {...register('email', { required: 'Email là bắt buộc', pattern: { value: /^\S+@\S+$/, message: 'Email không hợp lệ' } })} className="pl-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
+                    <Input type="email" placeholder="your@email.com" {...registerField('email', { required: 'Email là bắt buộc', pattern: { value: /^\S+@\S+$/, message: 'Email không hợp lệ' } })} className="pl-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
                   </div>
                   {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
                 </div>
@@ -147,7 +160,7 @@ export function RegisterPage() {
                   <Label className="text-gray-700 mb-2 block">Mật khẩu</Label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input type={showPass ? 'text' : 'password'} placeholder="Ít nhất 8 ký tự" {...register('password', { required: 'Mật khẩu là bắt buộc', minLength: { value: 8, message: 'Mật khẩu ít nhất 8 ký tự' } })} className="pl-10 pr-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
+                    <Input type={showPass ? 'text' : 'password'} placeholder="Ít nhất 8 ký tự" {...registerField('password', { required: 'Mật khẩu là bắt buộc', minLength: { value: 8, message: 'Mật khẩu ít nhất 8 ký tự' } })} className="pl-10 pr-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
                     <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -168,7 +181,7 @@ export function RegisterPage() {
                   <Label className="text-gray-700 mb-2 block">Xác nhận mật khẩu</Label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input type="password" placeholder="Nhập lại mật khẩu" {...register('confirm', { required: 'Xác nhận mật khẩu là bắt buộc', validate: (v) => v === watch('password') || 'Mật khẩu không khớp' })} className="pl-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
+                    <Input type="password" placeholder="Nhập lại mật khẩu" {...registerField('confirm', { required: 'Xác nhận mật khẩu là bắt buộc', validate: (v) => v === watch('password') || 'Mật khẩu không khớp' })} className="pl-10 h-12 rounded-xl border-gray-200 focus:border-teal-500" />
                   </div>
                   {errors.confirm && <p className="text-xs text-red-600 mt-1">{errors.confirm.message}</p>}
                 </div>

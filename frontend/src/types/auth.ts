@@ -1,7 +1,7 @@
 import type { AdminRole } from '@/lib/permissions';
 
 export type UserRole = 'admin' | 'customer';
-export type UserStatus = 'active' | 'pending' | 'rejected';
+export type UserStatus = 'active' | 'pending' | 'rejected' | 'locked';
 
 export interface User {
   id: string;
@@ -11,6 +11,7 @@ export interface User {
   adminRole?: AdminRole;
   status: UserStatus;
   avatar?: string;
+  isVerified?: boolean;
   createdAt?: string;
 }
 
@@ -30,6 +31,7 @@ export interface StoredUser {
   role: UserRole;
   adminRole?: AdminRole;
   status: UserStatus;
+  avatar?: string;
   createdAt: string;
   password?: string;
 }

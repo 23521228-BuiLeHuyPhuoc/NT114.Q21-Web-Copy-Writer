@@ -35,7 +35,7 @@ export function AdminLoginPage() {
 
   const onSubmit = async (data: AdminLoginFormData) => {
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, 'admin');
       toast.success('Chào mừng trở lại, Admin!');
       navigate('/admin');
     } catch (err: any) {

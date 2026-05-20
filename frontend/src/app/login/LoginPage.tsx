@@ -33,7 +33,7 @@ export function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, 'user');
       // AuthContext throws if admin tries to log in here — allow customer only
       const saved = localStorage.getItem('user');
       if (saved) {

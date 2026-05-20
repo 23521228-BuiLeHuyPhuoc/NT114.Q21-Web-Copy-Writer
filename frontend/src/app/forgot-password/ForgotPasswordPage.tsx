@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { api } from '@/lib/axios';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { BrandLogo } from '@/app/components/BrandLogo';
@@ -17,6 +18,7 @@ export function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const emailForm = useForm<EmailFormData>({ defaultValues: { email: '' } });
   const resetForm = useForm<ResetFormData>({ defaultValues: { newPass: '', confirmPass: '' } });
@@ -24,27 +26,57 @@ export function ForgotPasswordPage() {
 
   const handleSendOtp = async (data: EmailFormData) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 900));
-    setIsLoading(false);
-    toast.success(`Mã OTP đã gửi đến ${data.email}`);
-    setStep('otp');
+    try {
+      const response = await api.post('/auth/user/forgot-password', { email: data.email });
+      setDevOtp(response.data?.data?.devOtp || null);
+      toast.success(`Mã OTP đã gửi đến ${data.email}`);
+      setStep('otp');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không gửi được OTP');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyOtp = async () => {
     const code = otp.join('');
     if (code.length < 6) { toast.error('Nhập đủ 6 chữ số'); return; }
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    setIsLoading(false);
-    if (code === '123456') setStep('reset');
-    else toast.error('Mã OTP không đúng — Demo: 123456');
+    try {
+      await api.post('/auth/user/verify-otp', { email, otp: code });
+      setStep('reset');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Mã OTP không đúng hoặc đã hết hạn');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleReset = async (_data: ResetFormData) => {
+  const handleReset = async (data: ResetFormData) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 900));
-    setIsLoading(false);
-    setStep('done');
+    try {
+      await api.post('/auth/user/reset-password', {
+        email,
+        otp: otp.join(''),
+        newPassword: data.newPass,
+      });
+      setStep('done');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không đặt lại được mật khẩu');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    const currentEmail = emailForm.getValues('email');
+    if (!currentEmail) {
+      toast.error('Vui lòng nhập email trước');
+      return;
+    }
+
+    setOtp(['', '', '', '', '', '']);
+    await handleSendOtp({ email: currentEmail });
   };
 
   const handleOtpChange = (val: string, idx: number) => {
@@ -103,7 +135,7 @@ export function ForgotPasswordPage() {
                 {isLoading ? 'Đang gửi...' : 'Gửi mã OTP →'}
               </button>
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 text-center">
-                💡 Demo: Nhập bất kỳ email — OTP là <strong>123456</strong>
+                💡 Dev demo: backend sẽ trả OTP trong response khi không phải production.
               </div>
             </form>
           )}
@@ -134,10 +166,15 @@ export function ForgotPasswordPage() {
                 {isLoading ? 'Đang xác nhận...' : 'Xác nhận OTP →'}
               </button>
               <div className="text-center">
-                <button onClick={() => { setOtp(['','','','','','']); toast.success('Đã gửi lại OTP!'); }} className="text-sm text-teal-700 hover:underline inline-flex items-center gap-1.5">
+                <button onClick={resendOtp} className="text-sm text-teal-700 hover:underline inline-flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã
                 </button>
               </div>
+              {devOtp && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 text-center">
+                  OTP dev: <strong>{devOtp}</strong>
+                </div>
+              )}
             </div>
           )}
 
