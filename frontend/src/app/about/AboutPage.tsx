@@ -70,7 +70,6 @@ export function AboutPage() {
             </Badge>
             <h1
               className="text-white mb-6"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
             >
               Xây dựng tương lai
               <br />
@@ -127,7 +126,7 @@ export function AboutPage() {
                 className="w-full h-80 object-cover rounded-3xl shadow-2xl"
               />
               <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-xl p-5 border border-gray-100">
-                <p className="text-3xl font-bold text-green-600" style={{ fontFamily: 'Space Grotesk' }}>2,000+</p>
+                <p className="text-3xl font-bold text-green-600">2,000+</p>
                 <p className="text-sm text-gray-500 mt-0.5">doanh nghiệp tin dùng</p>
               </div>
             </div>
@@ -148,7 +147,7 @@ export function AboutPage() {
                   </div>
                   <p
                     className="text-2xl font-bold text-gray-900 mb-1"
-                    style={{ fontFamily: 'Space Grotesk', letterSpacing: '-0.03em' }}
+                    style={{ letterSpacing: '-0.03em' }}
                   >
                     {s.value}
                   </p>

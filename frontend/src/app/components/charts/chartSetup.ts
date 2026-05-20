@@ -26,5 +26,5 @@ Chart.register(
 );
 
 Chart.defaults.font.family =
-  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  '"Google Sans Flex", -apple-system, BlinkMacSystemFont, sans-serif';
 Chart.defaults.color = '#6b7280';

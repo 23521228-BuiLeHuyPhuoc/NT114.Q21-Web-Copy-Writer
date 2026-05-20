@@ -3,6 +3,7 @@ const AccountUser = require('../models/AccountUser');
 const ForgotPassword = require('../models/ForgotPassword');
 const createError = require('../utils/createError');
 const { signToken } = require('../utils/jwt');
+const { sendPasswordResetOtpEmail } = require('./mailService');
 const {
   compareOtp,
   generateOtp,
@@ -140,7 +141,7 @@ async function createPasswordReset(account, accountType) {
     { $set: { usedAt: new Date() } },
   );
 
-  await ForgotPassword.create({
+  const record = await ForgotPassword.create({
     email,
     accountType,
     accountId: account._id,
@@ -148,11 +149,7 @@ async function createPasswordReset(account, accountType) {
     expiresAt: getOtpExpiresAt(),
   });
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[auth:${accountType}] OTP for ${email}: ${otp}`);
-  }
-
-  return otp;
+  return { otp, record };
 }
 
 async function forgotPassword(accountType, email) {
@@ -161,14 +158,27 @@ async function forgotPassword(accountType, email) {
     return { exists: false };
   }
 
-  const otp = await createPasswordReset(account, accountType);
-  const data = { exists: true };
+  const { otp, record } = await createPasswordReset(account, accountType);
 
-  if (process.env.NODE_ENV !== 'production') {
-    data.devOtp = otp;
+  try {
+    await sendPasswordResetOtpEmail({
+      to: account.email,
+      otp,
+      accountType,
+      name: account.name,
+    });
+  } catch (error) {
+    record.usedAt = new Date();
+    await record.save();
+
+    if (error.statusCode) {
+      throw error;
+    }
+
+    throw createError(502, 'Could not send OTP email');
   }
 
-  return data;
+  return { exists: true };
 }
 
 async function findActiveOtp(email, accountType) {

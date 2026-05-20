@@ -39,7 +39,7 @@ export function BlogPage() {
           <Badge className="mb-5 border border-green-700/40 bg-green-900/50 px-4 py-1.5 text-green-300">
             Kiến thức & góc nhìn
           </Badge>
-          <h1 className="mb-4 text-white" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <h1 className="mb-4 text-white">
             Blog CopyPro
           </h1>
           <p className="mb-8 text-base text-gray-400">
@@ -173,7 +173,7 @@ export function BlogPage() {
                   <Link key={post.slug} to={`/blog/${post.slug}`} className="group flex gap-4">
                     <span
                       className="flex-shrink-0 text-2xl font-bold"
-                      style={{ fontFamily: 'Space Grotesk', color: index === 0 ? '#16a34a' : '#d1d5db' }}
+                      style={{ color: index === 0 ? '#16a34a' : '#d1d5db' }}
                     >
                       {String(index + 1).padStart(2, '0')}
                     </span>

@@ -42,7 +42,6 @@ export function BlogDetailPage() {
           <div className="max-w-5xl min-w-0">
             <h1
               className="mb-6 max-w-full break-words text-[1.75rem] leading-[1.16] text-white sm:text-[2.45rem] md:text-[3.05rem] lg:text-[3.45rem]"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
             >
               {post.title}
             </h1>

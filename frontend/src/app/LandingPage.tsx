@@ -152,7 +152,7 @@ export function LandingPage() {
               return (
                 <div key={stat.label} className="rounded-lg border border-gray-100 bg-white p-5 text-center">
                   <Icon className="mx-auto mb-3 h-5 w-5 text-green-600" />
-                  <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                   <p className="mt-1 text-xs font-medium text-gray-500">{stat.label}</p>
                 </div>
               );

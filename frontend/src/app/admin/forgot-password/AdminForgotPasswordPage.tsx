@@ -49,7 +49,6 @@ export function AdminForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
-  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const emailForm = useForm<EmailFormData>({ defaultValues: { email: 'admin@copypro.vn' } });
   const resetForm = useForm<ResetFormData>({ defaultValues: { newPass: '', confirmPass: '' } });
@@ -60,8 +59,7 @@ export function AdminForgotPasswordPage() {
   const handleSendOtp = async (data: EmailFormData) => {
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/admin/forgot-password', { email: data.email });
-      setDevOtp(response.data?.data?.devOtp || null);
+      await api.post('/auth/admin/forgot-password', { email: data.email });
       toast.success(`Mã OTP admin đã gửi đến ${data.email}`);
       setStep('otp');
     } catch (err: any) {
@@ -187,9 +185,6 @@ export function AdminForgotPasswordPage() {
                 {isLoading ? 'Đang gửi OTP...' : 'Gửi mã OTP admin'}
               </button>
 
-              <div className="bg-cyan-950/35 border border-cyan-800/40 rounded-xl p-3 text-xs text-cyan-200 text-center">
-                Dev demo: backend sẽ trả OTP admin trong response khi không phải production.
-              </div>
             </form>
           )}
 
@@ -236,11 +231,6 @@ export function AdminForgotPasswordPage() {
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã OTP
               </button>
-              {devOtp && (
-                <div className="bg-amber-950/40 border border-amber-700/40 rounded-xl p-3 text-xs text-amber-200 text-center">
-                  OTP dev admin: <strong>{devOtp}</strong>
-                </div>
-              )}
             </div>
           )}
 

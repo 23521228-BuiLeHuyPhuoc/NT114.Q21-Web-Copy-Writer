@@ -12,7 +12,6 @@ export {
   type UserRole,
   type UserStatus,
   type RegisterData,
-  type StoredUser,
 } from '@/types/auth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -31,12 +30,6 @@ export function useAuth() {
       login: s.login,
       register: s.register,
       logout: s.logout,
-      addUser: s.addUser,
-      approveAdmin: s.approveAdmin,
-      rejectAdmin: s.rejectAdmin,
-      updateUser: s.updateUser,
-      getPendingAdmins: s.getPendingAdmins,
-      getAllUsers: s.getAllUsers,
     })),
   );
 }

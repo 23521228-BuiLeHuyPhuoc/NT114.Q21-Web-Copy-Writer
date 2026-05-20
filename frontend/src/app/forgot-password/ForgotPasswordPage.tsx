@@ -18,7 +18,6 @@ export function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
-  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const emailForm = useForm<EmailFormData>({ defaultValues: { email: '' } });
   const resetForm = useForm<ResetFormData>({ defaultValues: { newPass: '', confirmPass: '' } });
@@ -27,8 +26,7 @@ export function ForgotPasswordPage() {
   const handleSendOtp = async (data: EmailFormData) => {
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/user/forgot-password', { email: data.email });
-      setDevOtp(response.data?.data?.devOtp || null);
+      await api.post('/auth/user/forgot-password', { email: data.email });
       toast.success(`Mã OTP đã gửi đến ${data.email}`);
       setStep('otp');
     } catch (err: any) {
@@ -134,9 +132,6 @@ export function ForgotPasswordPage() {
               <button type="submit" disabled={isLoading || emailForm.formState.isSubmitting} className="w-full h-12 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-60 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-teal-200">
                 {isLoading ? 'Đang gửi...' : 'Gửi mã OTP →'}
               </button>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 text-center">
-                💡 Dev demo: backend sẽ trả OTP trong response khi không phải production.
-              </div>
             </form>
           )}
 
@@ -170,11 +165,6 @@ export function ForgotPasswordPage() {
                   <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã
                 </button>
               </div>
-              {devOtp && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 text-center">
-                  OTP dev: <strong>{devOtp}</strong>
-                </div>
-              )}
             </div>
           )}
 

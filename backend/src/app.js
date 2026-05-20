@@ -7,6 +7,7 @@ const createError = require('./utils/createError');
 const errorHandler = require('./middlewares/error/errorHandler');
 const notFound = require('./middlewares/error/notFound');
 const adminAuthRoutes = require('./routes/admin/authRoutes');
+const adminUserRoutes = require('./routes/admin/userRoutes');
 const userAuthRoutes = require('./routes/user/authRoutes');
 
 const app = express();
@@ -43,6 +44,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth/user', userAuthRoutes);
 app.use('/api/auth/admin', adminAuthRoutes);
+app.use('/api/admin/users', adminUserRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

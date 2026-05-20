@@ -45,4 +45,4 @@ const forgotPasswordSchema = new mongoose.Schema(
 forgotPasswordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 forgotPasswordSchema.index({ email: 1, accountType: 1, createdAt: -1 });
 
-module.exports = mongoose.model('ForgotPassword', forgotPasswordSchema);
+module.exports = mongoose.model('ForgotPassword', forgotPasswordSchema, 'ForgotPassword');

@@ -61,7 +61,7 @@ export function PublicFooter() {
             <div>
               <h3
                 className="text-2xl font-bold text-white mb-2"
-                style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '-0.02em' }}
+                style={{ letterSpacing: '-0.02em' }}
               >
                 Sẵn sàng tạo copy đỉnh cao?
               </h3>

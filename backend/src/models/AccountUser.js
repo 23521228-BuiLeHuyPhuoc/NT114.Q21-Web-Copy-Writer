@@ -41,6 +41,15 @@ const accountUserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
@@ -55,4 +64,4 @@ accountUserSchema.methods.comparePassword = function comparePassword(candidate) 
   return bcrypt.compare(candidate, this.password);
 };
 
-module.exports = mongoose.model('AccountUser', accountUserSchema);
+module.exports = mongoose.model('AccountUser', accountUserSchema, 'AccountUser');

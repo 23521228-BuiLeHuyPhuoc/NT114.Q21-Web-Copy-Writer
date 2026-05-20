@@ -51,6 +51,15 @@ const accountAdminSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
@@ -67,4 +76,4 @@ accountAdminSchema.methods.comparePassword = function comparePassword(candidate)
 
 accountAdminSchema.statics.adminRoles = ADMIN_ROLES;
 
-module.exports = mongoose.model('AccountAdmin', accountAdminSchema);
+module.exports = mongoose.model('AccountAdmin', accountAdminSchema, 'AccountAdmin');

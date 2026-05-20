@@ -54,7 +54,7 @@ export function ContactPage() {
           <Badge className="mb-5 bg-green-900/50 text-green-300 border border-green-700/40 px-4 py-1.5">
             💬 Liên hệ với chúng tôi
           </Badge>
-          <h1 className="text-white mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <h1 className="text-white mb-4">
             Chúng tôi luôn sẵn sàng lắng nghe
           </h1>
           <p className="text-gray-400 text-base">
