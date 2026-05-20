@@ -13,6 +13,10 @@ const {
 
 const MAX_OTP_ATTEMPTS = 5;
 
+function getRemainingSeconds(date) {
+  return Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 1000));
+}
+
 function getAccountModel(accountType) {
   if (accountType === 'admin') return AccountAdmin;
   return AccountUser;
@@ -134,10 +138,29 @@ async function loginAdmin(email, password) {
 
 async function createPasswordReset(account, accountType) {
   const email = account.email.toLowerCase();
+  const activeOtp = await findActiveOtp(email, accountType);
+
+  if (activeOtp) {
+    const retryAfterSeconds = getRemainingSeconds(activeOtp.expiresAt);
+
+    throw createError(
+      429,
+      `OTP is still valid. Please wait ${retryAfterSeconds} seconds before requesting a new code.`,
+      null,
+      { retryAfterSeconds },
+    );
+  }
+
   const otp = generateOtp();
+  const expiresAt = getOtpExpiresAt();
 
   await ForgotPassword.updateMany(
-    { email, accountType, usedAt: null },
+    {
+      email,
+      accountType,
+      usedAt: null,
+      expiresAt: { $lte: new Date() },
+    },
     { $set: { usedAt: new Date() } },
   );
 
@@ -146,10 +169,14 @@ async function createPasswordReset(account, accountType) {
     accountType,
     accountId: account._id,
     otpHash: await hashOtp(otp),
-    expiresAt: getOtpExpiresAt(),
+    expiresAt,
   });
 
-  return { otp, record };
+  return {
+    otp,
+    record,
+    expiresInSeconds: getRemainingSeconds(expiresAt),
+  };
 }
 
 async function forgotPassword(accountType, email) {
@@ -158,7 +185,7 @@ async function forgotPassword(accountType, email) {
     return { exists: false };
   }
 
-  const { otp, record } = await createPasswordReset(account, accountType);
+  const { otp, record, expiresInSeconds } = await createPasswordReset(account, accountType);
 
   try {
     await sendPasswordResetOtpEmail({
@@ -178,7 +205,7 @@ async function forgotPassword(accountType, email) {
     throw createError(502, 'Could not send OTP email');
   }
 
-  return { exists: true };
+  return { exists: true, expiresInSeconds };
 }
 
 async function findActiveOtp(email, accountType) {

@@ -15,6 +15,10 @@ function errorHandler(err, req, res, next) {
     response.errors = err.errors;
   }
 
+  if (err.data) {
+    response.data = err.data;
+  }
+
   res.status(statusCode).json(response);
 }
 

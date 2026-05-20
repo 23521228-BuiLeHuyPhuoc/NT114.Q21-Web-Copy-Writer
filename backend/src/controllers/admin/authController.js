@@ -44,6 +44,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: data.exists ? 'OTP has been sent' : 'If the email exists, an OTP has been sent',
+    data: data.expiresInSeconds
+      ? { expiresInSeconds: data.expiresInSeconds }
+      : undefined,
   });
 });
 

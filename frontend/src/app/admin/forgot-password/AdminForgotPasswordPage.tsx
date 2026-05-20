@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { api } from '@/lib/axios';
@@ -19,6 +19,13 @@ interface EmailFormData {
 interface ResetFormData {
   newPass: string;
   confirmPass: string;
+}
+
+function formatCountdown(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
 const STEP_META = {
@@ -49,6 +56,7 @@ export function AdminForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
 
   const emailForm = useForm<EmailFormData>({ defaultValues: { email: 'admin@copypro.vn' } });
   const resetForm = useForm<ResetFormData>({ defaultValues: { newPass: '', confirmPass: '' } });
@@ -56,13 +64,32 @@ export function AdminForgotPasswordPage() {
   const meta = STEP_META[step];
   const Icon = meta.icon;
 
+  useEffect(() => {
+    if (resendSeconds <= 0) return undefined;
+
+    const timer = window.setInterval(() => {
+      setResendSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendSeconds]);
+
   const handleSendOtp = async (data: EmailFormData) => {
     setIsLoading(true);
     try {
-      await api.post('/auth/admin/forgot-password', { email: data.email });
+      const response = await api.post('/auth/admin/forgot-password', { email: data.email });
+      const expiresInSeconds = Number(response.data?.data?.expiresInSeconds || 300);
+      setResendSeconds(expiresInSeconds);
       toast.success(`Mã OTP admin đã gửi đến ${data.email}`);
       setStep('otp');
     } catch (err: any) {
+      const retryAfterSeconds = Number(err.response?.data?.data?.retryAfterSeconds || 0);
+
+      if (retryAfterSeconds > 0) {
+        setResendSeconds(retryAfterSeconds);
+        setStep('otp');
+      }
+
       toast.error(err.response?.data?.message || 'Không gửi được OTP admin');
     } finally {
       setIsLoading(false);
@@ -117,6 +144,11 @@ export function AdminForgotPasswordPage() {
     const currentEmail = emailForm.getValues('email');
     if (!currentEmail) {
       toast.error('Vui lòng nhập email admin trước');
+      return;
+    }
+
+    if (resendSeconds > 0) {
+      toast.error(`Vui lòng đợi ${formatCountdown(resendSeconds)} để gửi lại mã OTP`);
       return;
     }
 
@@ -226,10 +258,11 @@ export function AdminForgotPasswordPage() {
               <button
                 type="button"
                 onClick={resendOtp}
-                disabled={isLoading}
-                className="w-full h-10 text-sm text-cyan-300 hover:text-cyan-200 transition-colors inline-flex items-center justify-center gap-2"
+                disabled={isLoading || resendSeconds > 0}
+                className="w-full h-10 text-sm text-cyan-300 hover:text-cyan-200 disabled:text-gray-600 transition-colors inline-flex items-center justify-center gap-2"
               >
-                <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã OTP
+                <RefreshCw className="w-3.5 h-3.5" />
+                {resendSeconds > 0 ? `Gửi lại mã sau ${formatCountdown(resendSeconds)}` : 'Gửi lại mã OTP'}
               </button>
             </div>
           )}
