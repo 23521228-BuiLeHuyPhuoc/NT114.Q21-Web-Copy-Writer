@@ -1,6 +1,6 @@
 'use client';
 
-import { AdminForgotPasswordPage } from '@/app/pages/auth/AdminForgotPasswordPage';
+import { AdminForgotPasswordPage } from './AdminForgotPasswordPage';
 
 export default function AdminForgotPassword() {
   return <AdminForgotPasswordPage />;

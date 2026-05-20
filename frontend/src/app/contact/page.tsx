@@ -1,6 +1,6 @@
 'use client';
 
-import { ContactPage } from '@/app/pages/public/ContactPage';
+import { ContactPage } from './ContactPage';
 
 export default function Contact() {
   return <ContactPage />;

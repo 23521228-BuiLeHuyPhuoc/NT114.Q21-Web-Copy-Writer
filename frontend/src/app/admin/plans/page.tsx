@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminPlans } from '@/app/pages/admin/Plans';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminPlans } from './Plans';
 
 export default function AdminPlansPage() {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { ResetPasswordPage } from '@/app/pages/auth/ResetPasswordPage';
+import { ResetPasswordPage } from './ResetPasswordPage';
 
 export default function ResetPassword() {
   return <ResetPasswordPage />;

@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerBilling } from '@/app/pages/customer/Billing';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerBilling } from './Billing';
 
 export default function Billing() {
   return (

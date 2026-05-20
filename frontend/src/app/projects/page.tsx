@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerProjects } from '@/app/pages/customer/Projects';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerProjects } from './Projects';
 
 export default function Projects() {
   return (

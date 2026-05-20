@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminSettings } from '@/app/pages/admin/Settings';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminSettings } from './Settings';
 
 export default function AdminSettingsPage() {
   return (

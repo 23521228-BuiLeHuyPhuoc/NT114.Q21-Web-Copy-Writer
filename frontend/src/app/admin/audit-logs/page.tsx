@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminAuditLogs } from '@/app/pages/admin/AuditLogs';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminAuditLogs } from './AuditLogs';
 
 export default function AdminAuditLogsPage() {
   return (

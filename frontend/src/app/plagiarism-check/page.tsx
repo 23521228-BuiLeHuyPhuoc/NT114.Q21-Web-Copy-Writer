@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerPlagiarismCheck } from '@/app/pages/customer/PlagiarismCheck';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerPlagiarismCheck } from './PlagiarismCheck';
 
 export default function PlagiarismCheck() {
   return (

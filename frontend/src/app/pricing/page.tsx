@@ -1,6 +1,6 @@
 'use client';
 
-import { PricingPage } from '@/app/pages/public/PricingPage';
+import { PricingPage } from './PricingPage';
 
 export default function Pricing() {
   return <PricingPage />;

@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminPermissions } from '@/app/pages/admin/Permissions';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminPermissions } from './Permissions';
 
 export default function AdminPermissionsPage() {
   return (

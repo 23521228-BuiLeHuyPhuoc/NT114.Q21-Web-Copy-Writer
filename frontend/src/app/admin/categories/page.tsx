@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminCategories } from '@/app/pages/admin/Categories';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminCategories } from './Categories';
 
 export default function AdminCategoriesPage() {
   return (

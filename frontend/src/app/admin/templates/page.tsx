@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminTemplates } from '@/app/pages/admin/Templates';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminTemplates } from './Templates';
 
 export default function AdminTemplatesPage() {
   return (

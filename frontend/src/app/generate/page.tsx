@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerGenerator } from '@/app/pages/customer/Generator';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerGenerator } from './Generator';
 
 export default function Generate() {
   return (

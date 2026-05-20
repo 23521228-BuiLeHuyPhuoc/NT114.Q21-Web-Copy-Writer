@@ -1,6 +1,6 @@
 'use client';
 
-import { ForgotPasswordPage } from '@/app/pages/auth/ForgotPasswordPage';
+import { ForgotPasswordPage } from './ForgotPasswordPage';
 
 export default function ForgotPassword() {
   return <ForgotPasswordPage />;

@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerTemplates } from '@/app/pages/customer/Templates';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerTemplates } from './Templates';
 
 export default function Templates() {
   return (

@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminPayments } from '@/app/pages/admin/Payments';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminPayments } from './Payments';
 
 export default function AdminPaymentsPage() {
   return (

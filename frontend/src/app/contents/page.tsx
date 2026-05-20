@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerContents } from '@/app/pages/customer/Contents';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerContents } from './Contents';
 
 export default function Contents() {
   return (

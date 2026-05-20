@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '@/app/route-guards';
-import { CustomerFineTuningStudio } from '@/app/pages/customer/FineTuningStudio';
+import { ProtectedRoute } from '@/app/_shared/route-guards';
+import { CustomerFineTuningStudio } from './FineTuningStudio';
 
 export default function FineTune() {
   return (

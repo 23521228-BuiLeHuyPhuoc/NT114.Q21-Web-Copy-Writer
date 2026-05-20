@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminModelManagement } from '@/app/pages/admin/ModelManagement';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminModelManagement } from './ModelManagement';
 
 export default function AdminModelsPage() {
   return (

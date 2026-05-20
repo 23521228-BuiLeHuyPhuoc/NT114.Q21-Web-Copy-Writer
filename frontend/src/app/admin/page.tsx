@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminRoute } from '@/app/route-guards';
-import { AdminDashboard } from '@/app/pages/admin/Dashboard';
+import { AdminRoute } from '@/app/_shared/route-guards';
+import { AdminDashboard } from './Dashboard';
 
 export default function AdminHome() {
   return (
